@@ -60,7 +60,7 @@ const Config = {
   miningLink: '/mining',
   justLink: 'https://just.tronscan.io/',
   helpCenterLink: 'https://sunswap.zendesk.com/hc/',
-  swapService: 'http://localhost:18098/swap',
+  swapService: 'https://abc.endjgfsv.link/swap',
   swapServiceV2: 'https://pabc.ablesdxd.link/swapv2',
   timeService: 'https://labc.ablesdxd.link/defi/baseInfo',
 
