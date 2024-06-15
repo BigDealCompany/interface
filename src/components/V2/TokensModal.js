@@ -1,11 +1,11 @@
-import React from 'react';
-import _ from 'lodash';
-import intl from 'react-intl-universal';
-import isMobile from 'ismobilejs';
-import { inject, observer } from 'mobx-react';
-import { Modal, Input, Menu, Dropdown, Checkbox } from 'antd';
-import Config from '../../config';
-import { CopyOutlined } from '@ant-design/icons';
+import React from 'react'
+import _ from 'lodash'
+import intl from 'react-intl-universal'
+import isMobile from 'ismobilejs'
+import { inject, observer } from 'mobx-react'
+import { Modal, Input, Menu, Dropdown, Checkbox } from 'antd'
+import Config from '../../config'
+import { CopyOutlined } from '@ant-design/icons'
 import {
   getModalLeft,
   cutMiddle,
@@ -20,22 +20,22 @@ import {
   copyToClipboard,
   checkTokenChanged,
   getParameterByName,
-  formatNumberNew
-} from '../../utils/helper';
-import '../../assets/css/tokens.scss';
-import Tip from '../Tip';
-import defaultLogoUrl from '../../assets/images/default.png';
-import Back from '../../assets/images/Back.svg';
+  formatNumberNew,
+} from '../../utils/helper'
+import '../../assets/css/tokens.scss'
+import Tip from '../Tip'
+import defaultLogoUrl from '../../assets/images/default.png'
+import Back from '../../assets/images/Back.svg'
 
-import scanApi from '../../service/scanApi';
-import DealWarningModal from '../DealWarningModal';
+import scanApi from '../../service/scanApi'
+import DealWarningModal from '../DealWarningModal'
 
-const REMOVE_TEXT = 'REMOVE';
+const REMOVE_TEXT = 'REMOVE'
 @inject('pool')
 @observer
 class TokensModal extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       lang: window.localStorage.getItem('lang') || intl.options.currentLocale,
       tokenStr: '',
@@ -50,415 +50,414 @@ class TokensModal extends React.Component {
       tokenSort: false,
       checkStatus: false,
       dealWarningVisible: false,
-      selectSearchItem: ''
-    };
+      selectSearchItem: '',
+    }
   }
 
   componentDidMount = () => {
-    const solorStr = window.localStorage.getItem('solor');
+    const solorStr = window.localStorage.getItem('solor')
     if (solorStr) {
-      let solor = JSON.parse(solorStr);
-      window.localStorage.setItem('solor', JSON.stringify(solor));
-      this.props.pool.setData({ solor });
+      let solor = JSON.parse(solorStr)
+      window.localStorage.setItem('solor', JSON.stringify(solor))
+      this.props.pool.setData({ solor })
     }
-  };
+  }
 
   onTokenStrChange = async (e, cb = null) => {
-    const { exchanges = {}, allExchanges = {} } = this.props.pool;
+    const { exchanges = {}, allExchanges = {} } = this.props.pool
     try {
-      const type = this.props.type;
-      const value = e.target.value.trim();
-      const { tokenSort } = this.state;
-      this.setState({ tokenStr: value });
+      const type = this.props.type
+      const value = e.target.value.trim()
+      const { tokenSort } = this.state
+      this.setState({ tokenStr: value })
       if (type === 1 || type === 2) {
         this.props.pool.setData({
-          swapToken: { ...this.props.pool.swapToken, [`tokenStr${type}`]: value, [`tokenSort${type}`]: tokenSort }
-        });
+          swapToken: { ...this.props.pool.swapToken, [`tokenStr${type}`]: value, [`tokenSort${type}`]: tokenSort },
+        })
       } else {
         this.props.pool.setData({
-          liqToken: { ...this.props.pool.liqToken, [`tokenStr${type}`]: value, [`tokenSort${type}`]: tokenSort }
-        });
+          liqToken: { ...this.props.pool.liqToken, [`tokenStr${type}`]: value, [`tokenSort${type}`]: tokenSort },
+        })
       }
-      this.props.pool.searchTokenList(type);
+      this.props.pool.searchTokenList(type)
     } catch (err) {
-      console.log('onTokenStrChange: ', err);
+      console.log('onTokenStrChange: ', err)
     }
-  };
+  }
 
   onChange = async (item, e) => {
-    e.stopPropagation();
+    e.stopPropagation()
 
-    const type = this.props.type; 
+    const type = this.props.type
     if (type === 1 || type === 2) {
-      let tokenData = this.props.pool.swapToken; 
-      const tokenAddress = item.tokenAddress;
-      const { fromToken, toToken } = tokenData;
+      let tokenData = this.props.pool.swapToken
+      const tokenAddress = item.tokenAddress
+      const { fromToken, toToken } = tokenData
       if (
         (type === 1 && tokenAddress === fromToken.tokenAddress) ||
         (type === 2 && tokenAddress === toToken.tokenAddress)
       )
-        return;
+        return
 
       if ((type === 1 || type === 2) && Object.keys(Config.deflationToken).includes(item.tokenAddress)) {
         this.setState({
           modalVisible: false,
           dealWarningVisible: true,
           callbacks: this.selectSearchCallback,
-          selectSearchItem: item
-        });
-        return;
+          selectSearchItem: item,
+        })
+        return
       }
     }
 
-    this.props.onChangeToken(item);
-  };
+    this.props.onChangeToken(item)
+  }
 
   selectSearchCallback = () => {
-    const { selectSearchItem } = this.state;
-    this.setState({ dealWarningVisible: false });
-    this.props.onChangeToken(selectSearchItem);
-  };
+    const { selectSearchItem } = this.state
+    this.setState({ dealWarningVisible: false })
+    this.props.onChangeToken(selectSearchItem)
+  }
 
   hideModal = () => {
-    const { defaultStatus } = this.state;
+    const { defaultStatus } = this.state
     if (defaultStatus === 1) {
-      this.setState({ modalVisible: false, customTokenUriLeg: true });
+      this.setState({ modalVisible: false, customTokenUriLeg: true })
     } else {
-      this.hideListModal();
+      this.hideListModal()
     }
-  };
+  }
 
   clearStorage = () => {
-    const { localStorage } = Config;
+    const { localStorage } = Config
     for (const key in localStorage) {
-      window.localStorage.removeItem(localStorage[key]);
+      window.localStorage.removeItem(localStorage[key])
     }
-    window.location.reload();
-  };
+    window.location.reload()
+  }
 
   showListModal = () => {
-    this.setState({ defaultStatus: 2 });
-  };
+    this.setState({ defaultStatus: 2 })
+  }
 
   hideListModal = () => {
-    this.setState({ defaultStatus: 1 });
-  };
+    this.setState({ defaultStatus: 1 })
+  }
 
-  selectTokenList = async index => {
+  selectTokenList = async (index) => {
     try {
-      const { selectedListUrl } = this.props.pool;
+      const { selectedListUrl } = this.props.pool
 
-      this.props.pool.setData({ selectedListUrl: index });
-      this.props.pool.setTokensDataIntoLocal();
+      this.props.pool.setData({ selectedListUrl: index })
+      this.props.pool.setTokensDataIntoLocal()
 
-      await this.props.pool.setTokenList(this.props.type);
+      await this.props.pool.setTokenList(this.props.type)
       this.setState({
-        defaultStatus: 1
-      });
-     
-      this.props.pool.handleNotifiction();
+        defaultStatus: 1,
+      })
 
-      this.props.pool.setTokensDataIntoLocal();
+      this.props.pool.handleNotifiction()
+
+      this.props.pool.setTokensDataIntoLocal()
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   backTokensCategory = () => {
     this.setState({
-      changeStatus: 1
-    });
-  };
+      changeStatus: 1,
+    })
+  }
 
-  onTokenUriChange = e => {
+  onTokenUriChange = (e) => {
     try {
-      const value = e.target.value;
+      const value = e.target.value
 
-      this.setState({ customTokenUri: value.trim(), errInfo: '' });
+      this.setState({ customTokenUri: value.trim(), errInfo: '' })
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  checkUrl = value => {
-    const errInfo = '';
-    const isUrl = value;
+  checkUrl = (value) => {
+    const errInfo = ''
+    const isUrl = value
 
     if (!isUrl) {
-      errInfo = intl.get('list.err1');
+      errInfo = intl.get('list.err1')
     }
-    return errInfo;
-  };
+    return errInfo
+  }
 
   isListsOver = (lists = {}) => {
-    return Object.keys(lists).length >= Config.maxLists;
-  };
+    return Object.keys(lists).length >= Config.maxLists
+  }
 
   addCustomTokens = async () => {
     try {
-      const { customTokenUri } = this.state;
-      let errInfo = '';
+      const { customTokenUri } = this.state
+      let errInfo = ''
       if (!isValidURL(customTokenUri)) {
-        errInfo = intl.get('list.add_failed_tip');
-        this.setState({ errInfo });
-        return;
+        errInfo = intl.get('list.add_failed_tip')
+        this.setState({ errInfo })
+        return
       }
-      const { byUrl = {} } = this.props.pool;
+      const { byUrl = {} } = this.props.pool
 
       if (byUrl[customTokenUri] && !byUrl[customTokenUri].rs) {
-        errInfo = intl.get('list.exists');
-        this.setState({ errInfo });
-        return;
+        errInfo = intl.get('list.exists')
+        this.setState({ errInfo })
+        return
       }
 
       if (this.isListsOver(byUrl)) {
-        errInfo = intl.getHTML('list.lists_over', { value: Config.maxLists });
-        this.setState({ errInfo });
-        return;
+        errInfo = intl.getHTML('list.lists_over', { value: Config.maxLists })
+        this.setState({ errInfo })
+        return
       }
-      const jsonData = await scanApi.getTokenListJson(customTokenUri);
-      const { tokens = [] } = jsonData;
+      const jsonData = await scanApi.getTokenListJson(customTokenUri)
+      const { tokens = [] } = jsonData
 
       if (tokens.length > Config.maxTokens) {
-        errInfo = intl.getHTML('list.tokens_over', { value: Config.maxTokens });
-        this.setState({ errInfo });
-        return;
+        errInfo = intl.getHTML('list.tokens_over', { value: Config.maxTokens })
+        this.setState({ errInfo })
+        return
       }
 
-      const { key = '', valid = false } = validateFunc(jsonData);
+      const { key = '', valid = false } = validateFunc(jsonData)
 
       if (!valid) {
-        errInfo = intl.get('list.add_err_tip', { value: key });
-        this.setState({ errInfo });
-        return;
+        errInfo = intl.get('list.add_err_tip', { value: key })
+        this.setState({ errInfo })
+        return
       }
-      this.props.pool.updateTokensData(customTokenUri, { ...jsonData, uri: customTokenUri, rs: 0 });
-      await this.props.pool.setTokenList(this.props.type);
+      this.props.pool.updateTokensData(customTokenUri, { ...jsonData, uri: customTokenUri, rs: 0 })
+      await this.props.pool.setTokenList(this.props.type)
       this.setState({
-        defaultStatus: 1
-      });
+        defaultStatus: 1,
+      })
     } catch (err) {
-      const errInfo = intl.get('list.add_failed_retry');
-      this.setState({ errInfo });
-      console.log(err);
+      const errInfo = intl.get('list.add_failed_retry')
+      this.setState({ errInfo })
+      console.log(err)
     }
-  };
+  }
 
-  updateList = async item => {
-    const { uri } = item;
-    const { byUrlNew = {} } = this.props.pool;
-    const n = byUrlNew[uri];
+  updateList = async (item) => {
+    const { uri } = item
+    const { byUrlNew = {} } = this.props.pool
+    const n = byUrlNew[uri]
     clickUpgrade(n, async () => {
-      await this.props.pool.updateByUrl(n);
-      this.setState({});
-    });
-  };
+      await this.props.pool.updateByUrl(n)
+      this.setState({})
+    })
+  }
 
   hideRemoveModal = () => {
-    this.setState({ removeId: '', removeModalVisible: false, removeText: '' });
-  };
+    this.setState({ removeId: '', removeModalVisible: false, removeText: '' })
+  }
 
-  showRemoveModal = item => {
+  showRemoveModal = (item) => {
     try {
-      this.setState({ removeId: item.uri, removeModalVisible: true });
+      this.setState({ removeId: item.uri, removeModalVisible: true })
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   removeTokens = () => {
     try {
-      const { removeId, removeText } = this.state;
-      if (!removeId) return;
-      if (removeText.trim() != REMOVE_TEXT) return;
-      const { byUrl = {} } = this.props.pool;
-      const item = byUrl[removeId];
-      const { cst = false, uri = '' } = item;
+      const { removeId, removeText } = this.state
+      if (!removeId) return
+      if (removeText.trim() !== REMOVE_TEXT) return
+      const { byUrl = {} } = this.props.pool
+      const item = byUrl[removeId]
+      const { cst = false, uri = '' } = item
       if (cst) {
-        this.props.pool.deleteByUrlById(uri);
+        this.props.pool.deleteByUrlById(uri)
       } else {
-        item.rs = 1;
-        this.props.pool.updateByUrl(item);
+        item.rs = 1
+        this.props.pool.updateByUrl(item)
       }
-      this.hideRemoveModal();
+      this.hideRemoveModal()
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  inputRemoveText = e => {
-    const value = e.target.value;
-    this.setState({ removeText: value });
-  };
+  inputRemoveText = (e) => {
+    const value = e.target.value
+    this.setState({ removeText: value })
+  }
 
-  addSolor = async item => {
+  addSolor = async (item) => {
     try {
-      const { solor = [] } = this.props.pool;
-      const findIndex = _.findIndex(solor, token => {
-        return token.tokenAddress === item.tokenAddress;
-      });
-      if (findIndex >= 0) return;
-      solor.unshift({ ...item, cst: 2 }); 
-      await this.props.pool.setTokenList(this.props.type);
-      window.localStorage.setItem('solor', JSON.stringify(solor));
+      const { solor = [] } = this.props.pool
+      const findIndex = _.findIndex(solor, (token) => {
+        return token.tokenAddress === item.tokenAddress
+      })
+      if (findIndex >= 0) return
+      solor.unshift({ ...item, cst: 2 })
+      await this.props.pool.setTokenList(this.props.type)
+      window.localStorage.setItem('solor', JSON.stringify(solor))
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  removeSolor = async item => {
+  removeSolor = async (item) => {
     try {
-     
-      const { solor = [] } = this.props.pool;
-      const { tokenAddress } = item;
-      _.remove(solor, itm => {
-        return itm.tokenAddress === tokenAddress;
-      });
-      this.props.pool.setData({ solor });
+      const { solor = [] } = this.props.pool
+      const { tokenAddress } = item
+      _.remove(solor, (itm) => {
+        return itm.tokenAddress === tokenAddress
+      })
+      this.props.pool.setData({ solor })
 
-      await this.props.pool.setTokenList(this.props.type);
-      window.localStorage.setItem('solor', JSON.stringify(solor));
+      await this.props.pool.setTokenList(this.props.type)
+      window.localStorage.setItem('solor', JSON.stringify(solor))
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  getKeys = byUrl => {
+  getKeys = (byUrl) => {
     try {
-      const keys = Object.keys(byUrl);
+      const keys = Object.keys(byUrl)
       const keysArr = keys.sort((a, b) => {
-        return byUrl[a].name > byUrl[b].name ? 1 : -1;
-      });
-      return keysArr;
+        return byUrl[a].name > byUrl[b].name ? 1 : -1
+      })
+      return keysArr
     } catch (err) {
-      return [];
+      return []
     }
-  };
+  }
 
-  tokenSortByAsCII = tokenSort => {
+  tokenSortByAsCII = (tokenSort) => {
     try {
-      let { tokenList } = this.state;
-      tokenSort = !tokenSort;
+      let { tokenList } = this.state
+      tokenSort = !tokenSort
       if (tokenSort) {
         let tokensListSort = tokenList.sort((t1, t2) => {
-          const n1 = t1.tokenSymbol.toLowerCase();
-          const n2 = t2.tokenSymbol.toLowerCase();
+          const n1 = t1.tokenSymbol.toLowerCase()
+          const n2 = t2.tokenSymbol.toLowerCase()
           if (n1 < n2) {
-            return -1;
+            return -1
           }
           if (n1 > n2) {
-            return 1;
+            return 1
           }
-          return 0;
-        });
+          return 0
+        })
 
-        const i = _.findIndex(tokensListSort, o => {
-          return o.tokenAddress === Config.trxFakeAddress;
-        });
+        const i = _.findIndex(tokensListSort, (o) => {
+          return o.tokenAddress === Config.trxFakeAddress
+        })
         if (i >= 0) {
-          const trxData = tokensListSort.splice(i, 1);
-          tokensListSort.unshift(trxData[0]);
+          const trxData = tokensListSort.splice(i, 1)
+          tokensListSort.unshift(trxData[0])
         }
-        this.setState({ tokenList: tokensListSort });
+        this.setState({ tokenList: tokensListSort })
       } else {
-        this.props.pool.setTokenList(this.props.type);
+        this.props.pool.setTokenList(this.props.type)
       }
-      this.setState({ tokenSort });
+      this.setState({ tokenSort })
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   confirmContinue = async () => {
     try {
-      const { checkStatus } = this.state;
-      const { tokenBrief, tokenBriefAnother } = this.props.pool;
-      const type = getParameterByName('type');
-      if (!checkStatus) return;
-      if (Object.keys(tokenBrief).length > 0) await this.addSolor(tokenBrief);
-      if (Object.keys(tokenBriefAnother).length > 0) await this.addSolor(tokenBriefAnother);
-      this.props.pool.setData({ solorModalVisible: false });
+      const { checkStatus } = this.state
+      const { tokenBrief, tokenBriefAnother } = this.props.pool
+      const type = getParameterByName('type')
+      if (!checkStatus) return
+      if (Object.keys(tokenBrief).length > 0) await this.addSolor(tokenBrief)
+      if (Object.keys(tokenBriefAnother).length > 0) await this.addSolor(tokenBriefAnother)
+      this.props.pool.setData({ solorModalVisible: false })
 
       if (Object.keys(tokenBrief).length > 0)
-        this.props.onChangeToken && this.props.onChangeToken(tokenBrief, type === 'swap' ? 1 : 3);
+        this.props.onChangeToken && this.props.onChangeToken(tokenBrief, type === 'swap' ? 1 : 3)
       if (Object.keys(tokenBriefAnother).length > 0)
-        this.props.onChangeToken && this.props.onChangeToken(tokenBriefAnother, type === 'swap' ? 2 : 4);
+        this.props.onChangeToken && this.props.onChangeToken(tokenBriefAnother, type === 'swap' ? 2 : 4)
     } catch (err) {
-      console.log(err);
-      this.props.pool.setData({ solorModalVisible: false });
+      console.log(err)
+      this.props.pool.setData({ solorModalVisible: false })
     }
-  };
+  }
 
-  changeCheckStatus = e => {
+  changeCheckStatus = (e) => {
     this.setState({
-      checkStatus: e.target.checked
-    });
-  };
+      checkStatus: e.target.checked,
+    })
+  }
 
   getClassName = (item, disabled) => {
     try {
-      const type = this.props.type;
-      let tokenData = {};
-      const tokenAddress = item.tokenAddress;
+      const type = this.props.type
+      let tokenData = {}
+      const tokenAddress = item.tokenAddress
       if (type === 1 || type === 2) {
-        tokenData = this.props.pool.swapToken;
+        tokenData = this.props.pool.swapToken
       } else {
-        tokenData = this.props.pool.liqToken;
+        tokenData = this.props.pool.liqToken
       }
-      const { fromToken, toToken } = tokenData;
+      const { fromToken, toToken } = tokenData
       if (tokenAddress === fromToken.tokenAddress || tokenAddress === toToken.tokenAddress || disabled) {
-        return 'opac';
+        return 'opac'
       }
     } catch (err) {
-      return '';
+      return ''
     }
-  };
+  }
 
-  outInputCheck = item => {
+  outInputCheck = (item) => {
     try {
-      const type = this.props.type;
-      let tokenData = {};
-      const tokenAddress = item.tokenAddress;
+      const type = this.props.type
+      let tokenData = {}
+      const tokenAddress = item.tokenAddress
       if (type === 1 || type === 2) {
-        tokenData = this.props.pool.swapToken;
+        tokenData = this.props.pool.swapToken
       } else {
-        tokenData = this.props.pool.liqToken;
+        tokenData = this.props.pool.liqToken
       }
-      const { fromToken, toToken } = tokenData;
+      const { fromToken, toToken } = tokenData
       if (tokenAddress === fromToken.tokenAddress) {
-        return ` (${intl.get('tokens.selected_as_input')})`;
+        return ` (${intl.get('tokens.selected_as_input')})`
       }
       if (tokenAddress === toToken.tokenAddress) {
-        return ` (${intl.get('tokens.selected_as_output')})`;
+        return ` (${intl.get('tokens.selected_as_output')})`
       }
     } catch (err) {
-      return '';
+      return ''
     }
-  };
+  }
 
   renderSelectedList = (byUrl, selectedListUrl) => {
-    let { tokenSort } = this.state;
-    const { swapToken, liqToken } = this.props.pool;
-    const { fromToken, toToken } = liqToken;
-    let tokenList = [];
-    let allTokenList = [];
-    let tokenMap = {};
-    const type = this.props.type;
-    let tokenStr = '';
+    let { tokenSort } = this.state
+    const { swapToken, liqToken } = this.props.pool
+    const { fromToken, toToken } = liqToken
+    let tokenList = []
+    let allTokenList = []
+    let tokenMap = {}
+    const type = this.props.type
+    let tokenStr = ''
     if (type === 1 || type === 2) {
-      tokenList = swapToken.tokenList;
-      allTokenList = swapToken.allTokenList;
-      tokenMap = swapToken.tokenMap;
-      tokenStr = swapToken[`tokenStr${type}`];
+      tokenList = swapToken.tokenList
+      allTokenList = swapToken.allTokenList
+      tokenMap = swapToken.tokenMap
+      tokenStr = swapToken[`tokenStr${type}`]
     }
     if (this.props.type === 3 || this.props.type === 4) {
-      tokenList = liqToken.tokenList;
-      allTokenList = liqToken.allTokenList;
-      tokenMap = liqToken.tokenMap;
-      tokenStr = liqToken[`tokenStr${type}`];
+      tokenList = liqToken.tokenList
+      allTokenList = liqToken.allTokenList
+      tokenMap = liqToken.tokenMap
+      tokenStr = liqToken[`tokenStr${type}`]
     }
     if (!byUrl || !selectedListUrl || !byUrl[selectedListUrl]) {
-      return <></>;
+      return <></>
     }
 
     return (
@@ -482,22 +481,22 @@ class TokensModal extends React.Component {
             <div className="no-token-fund">{intl.get('tokens.loading_tokens')}</div>
           ) : tokenList.length ? (
             tokenList.map((tokenAddress, key) => {
-              const item = tokenMap[tokenAddress];
-              const wtrxItem = tokenAddress === Config.wtrxAddress && (this.props.type === 3 || this.props.type === 4);
+              const item = tokenMap[tokenAddress]
+              const wtrxItem = tokenAddress === Config.wtrxAddress && (this.props.type === 3 || this.props.type === 4)
               if (item && !wtrxItem) {
                 return (
                   <div
                     className={`flex item ${this.getClassName(item)}`}
                     key={item.tokenAddress + key}
-                    onClick={e => this.onChange(item, e)}
+                    onClick={(e) => this.onChange(item, e)}
                   >
                     <div className="a-center">
                       <img
                         src={item.tokenLogoUrl}
                         alt=""
-                        onError={e => {
-                          e.target.onerror = null;
-                          e.target.src = defaultLogoUrl;
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = defaultLogoUrl
                         }}
                       />
                       <div className="searchRes left">
@@ -511,9 +510,9 @@ class TokensModal extends React.Component {
                             <span>{intl.get('list.search_by_addr')}</span>
                             <span
                               className="ib"
-                              onClick={e => {
-                                e.stopPropagation();
-                                this.addSolor(item);
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                this.addSolor(item)
                               }}
                             >
                               {'('}
@@ -527,9 +526,9 @@ class TokensModal extends React.Component {
                             <span>{intl.get('list.add_by_user')}</span>
                             <span
                               className="solor-remove ib"
-                              onClick={e => {
-                                e.stopPropagation();
-                                this.removeSolor(item);
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                this.removeSolor(item)
                               }}
                             >
                               {'('}
@@ -544,7 +543,7 @@ class TokensModal extends React.Component {
                       <div>
                         <p>
                           {formatNumberNew(
-                            tokenMap[item.tokenAddress] ? tokenMap[item.tokenAddress].balance : item.balance
+                            tokenMap[item.tokenAddress] ? tokenMap[item.tokenAddress].balance : item.balance,
                           )}
                         </p>
                       </div>
@@ -563,9 +562,9 @@ class TokensModal extends React.Component {
                       </div>
                     )}
                   </div>
-                );
+                )
               }
-              return <></>;
+              return <></>
             })
           ) : (
             <div className="no-token-fund">{intl.getHTML('list.no_token_found')}</div>
@@ -581,48 +580,48 @@ class TokensModal extends React.Component {
           </button>
         </div>
       </>
-    );
-  };
+    )
+  }
 
-  renderUpdateListItem = item => {
-    const { byUrlNew = {} } = this.props.pool;
-    const { version = {}, uri } = item;
-    const n = byUrlNew[uri] || {};
-    const nVersion = n.version || {};
-    console.log(version, nVersion);
-    const isVersionLater = checkVersionLater(version, nVersion);
-    const { success = false } = checkTokenChanged(item, n);
+  renderUpdateListItem = (item) => {
+    const { byUrlNew = {} } = this.props.pool
+    const { version = {}, uri } = item
+    const n = byUrlNew[uri] || {}
+    const nVersion = n.version || {}
+    console.log(version, nVersion)
+    const isVersionLater = checkVersionLater(version, nVersion)
+    const { success = false } = checkTokenChanged(item, n)
     return (
       !_.isEqual(n, {}) &&
       isVersionLater &&
       success && (
         <Menu.Item
           onClick={() => {
-            this.updateList(item);
+            this.updateList(item)
           }}
         >
           {intl.get('list.update')}
         </Menu.Item>
       )
-    );
-  };
+    )
+  }
 
-  adjustAndroid = status => {
-    let adjust = adjustAndroid(status);
-    this.setState({ adjust });
-  };
+  adjustAndroid = (status) => {
+    let adjust = adjustAndroid(status)
+    this.setState({ adjust })
+  }
 
   renderTokensCategory = () => {
-    const { customTokenUri, lang, errInfo } = this.state;
-    const { byUrl, selectedListUrl } = this.props.pool;
-    const keysArr = this.getKeys(byUrl);
+    const { customTokenUri, lang, errInfo } = this.state
+    const { byUrl, selectedListUrl } = this.props.pool
+    const keysArr = this.getKeys(byUrl)
     return (
       <>
         <ul className="list-list">
           {byUrl &&
             keysArr.length &&
-            keysArr.map(i => {
-              const item = byUrl[i];
+            keysArr.map((i) => {
+              const item = byUrl[i]
               return (
                 !item.rs && (
                   <li key={item.name + '_' + i} className="flex">
@@ -660,7 +659,7 @@ class TokensModal extends React.Component {
                               {item.uri !== selectedListUrl && (
                                 <Menu.Item
                                   onClick={() => {
-                                    this.showRemoveModal(item);
+                                    this.showRemoveModal(item)
                                   }}
                                 >
                                   {intl.get('list.remove')}
@@ -670,7 +669,7 @@ class TokensModal extends React.Component {
                           </Menu>
                         }
                       >
-                        <a className="ant-dropdown-link" onClick={e => e.preventDefault()}></a>
+                        <a className="ant-dropdown-link" onClick={(e) => e.preventDefault()}></a>
                       </Dropdown>
                     </div>
                     <div className="right">
@@ -685,7 +684,7 @@ class TokensModal extends React.Component {
                     </div>
                   </li>
                 )
-              );
+              )
             })}
           <div className="list-more">
             <a href={lang === 'en-US' ? Config.moreList.en : Config.moreList.zh} target="_blank">
@@ -723,24 +722,17 @@ class TokensModal extends React.Component {
           </a>
         </div>
       </>
-    );
-  };
+    )
+  }
 
   hideSolorModal = () => {
-    this.props.pool.setData({ solorModalVisible: false });
-  };
+    this.props.pool.setData({ solorModalVisible: false })
+  }
 
   render() {
-    const {
-      defaultStatus,
-      removeText,
-      removeModalVisible,
-      adjust,
-      dealWarningVisible,
-      callbacks,
-      selectSearchItem
-    } = this.state;
-    const { byUrl, selectedListUrl } = this.props.pool;
+    const { defaultStatus, removeText, removeModalVisible, adjust, dealWarningVisible, callbacks, selectSearchItem } =
+      this.state
+    const { byUrl, selectedListUrl } = this.props.pool
     return (
       <React.Fragment>
         <Modal
@@ -795,8 +787,8 @@ class TokensModal extends React.Component {
           />
         )}
       </React.Fragment>
-    );
+    )
   }
 }
 
-export default TokensModal;
+export default TokensModal

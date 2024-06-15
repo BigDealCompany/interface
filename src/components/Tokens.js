@@ -1,13 +1,13 @@
-import React from 'react';
-import _ from 'lodash';
-import intl from 'react-intl-universal';
-import isMobile from 'ismobilejs';
-import { inject, observer } from 'mobx-react';
-import { Modal, Input, Menu, Dropdown, Checkbox } from 'antd';
-import Config from '../config';
-import BigNumber from 'bignumber.js';
-import { getBalancePro, simpleGetBalance, getExchangeAddr, isPairs } from '../utils/blockchain';
-import { CopyOutlined } from '@ant-design/icons';
+import React from 'react'
+import _ from 'lodash'
+import intl from 'react-intl-universal'
+import isMobile from 'ismobilejs'
+import { inject, observer } from 'mobx-react'
+import { Modal, Input, Menu, Dropdown, Checkbox } from 'antd'
+import Config from '../config'
+import BigNumber from 'bignumber.js'
+import { getBalancePro, simpleGetBalance, getExchangeAddr, isPairs } from '../utils/blockchain'
+import { CopyOutlined } from '@ant-design/icons'
 import {
   isAddress,
   getModalLeft,
@@ -23,23 +23,23 @@ import {
   copyToClipboard,
   checkTokenChanged,
   formatNumber,
-  formatNumberNew
-} from '../utils/helper';
+  formatNumberNew,
+} from '../utils/helper'
 
-import '../assets/css/tokens.scss';
-import Tip from './Tip';
-import defaultLogoUrl from '../assets/images/default.png';
-import trxLogoUrl from '../assets/images/trxIcon.png';
-import Back from '../assets/images/Back.svg';
+import '../assets/css/tokens.scss'
+import Tip from './Tip'
+import defaultLogoUrl from '../assets/images/default.png'
+import trxLogoUrl from '../assets/images/trxIcon.png'
+import Back from '../assets/images/Back.svg'
 
-import scanApi from '../service/scanApi';
-import DealWarningModal from './DealWarningModal';
+import scanApi from '../service/scanApi'
+import DealWarningModal from './DealWarningModal'
 
-const REMOVE_TEXT = 'REMOVE';
+const REMOVE_TEXT = 'REMOVE'
 @inject('pool')
 class Tokens extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       lang: window.localStorage.getItem('lang') || intl.options.currentLocale,
       modalVisible: false,
@@ -56,9 +56,9 @@ class Tokens extends React.Component {
           tokenLogoUrl: trxLogoUrl,
           tokenName: 'TRX',
           tokenDecimal: Config.trxDecimal,
-          removeText: ''
+          removeText: '',
           // type: true
-        }
+        },
       },
       defaultStatus: 1, // default vs tokensCategory
       removeModalVisible: false,
@@ -73,38 +73,38 @@ class Tokens extends React.Component {
       tokenBrief: {},
       checkStatus: false,
       dealWarningVisible: false,
-      selectSearchItem: ''
-    };
+      selectSearchItem: '',
+    }
   }
 
   componentDidMount = () => {
-    const solorStr = window.localStorage.getItem('solor');
+    const solorStr = window.localStorage.getItem('solor')
     if (solorStr) {
-      let solor = JSON.parse(solorStr);
+      let solor = JSON.parse(solorStr)
 
-      window.localStorage.setItem('solor', JSON.stringify(solor));
-      this.props.pool.setData({ solor });
+      window.localStorage.setItem('solor', JSON.stringify(solor))
+      this.props.pool.setData({ solor })
     }
-  };
+  }
 
   setTokenList = async (cb = null) => {
     try {
-      const { byUrl = {}, selectedListUrl = '', solor = [] } = this.props.pool;
-      const version = window.localStorage.getItem('swapVersion');
-      let allList = byUrl[selectedListUrl].tokens || [];
-      const allListUnique = _.uniqBy(allList, 'address');
-      if (allListUnique.length != allList.length) {
-        allList = [];
+      const { byUrl = {}, selectedListUrl = '', solor = [] } = this.props.pool
+      const version = window.localStorage.getItem('swapVersion')
+      let allList = byUrl[selectedListUrl].tokens || []
+      const allListUnique = _.uniqBy(allList, 'address')
+      if (allListUnique.length !== allList.length) {
+        allList = []
       }
-      let isToken = byUrl[selectedListUrl].isToken;
+      let isToken = byUrl[selectedListUrl].isToken
       if (isToken === undefined) {
-        isToken = await scanApi.isToken(allList.map(item => item.address));
+        isToken = await scanApi.isToken(allList.map((item) => item.address))
 
-        byUrl[selectedListUrl].isToken = Number(isToken);
-        await this.props.pool.updateByUrl(byUrl[selectedListUrl]);
+        byUrl[selectedListUrl].isToken = Number(isToken)
+        await this.props.pool.updateByUrl(byUrl[selectedListUrl])
       }
       if (Number(isToken) === 2) {
-        allList = [];
+        allList = []
       }
       const trxData = {
         tokenAddress: Config.trxFakeAddress,
@@ -115,13 +115,13 @@ class Tokens extends React.Component {
         tokenLogoUrl: trxLogoUrl,
         tokenName: 'TRX',
         tokenDecimal: Config.trxDecimal,
-        balance: '-'
-      };
+        balance: '-',
+      }
 
-      const { exchanges = {}, allExchanges = {} } = this.props.pool;
-      let list = [];
+      const { exchanges = {}, allExchanges = {} } = this.props.pool
+      let list = []
       if (this.props.swap) {
-        allList.map(item => {
+        allList.map((item) => {
           if (item.address && exchanges[item.address] && exchanges[item.address].e) {
             list.push({
               tokenAddress: item.address,
@@ -138,12 +138,12 @@ class Tokens extends React.Component {
               tokenLogoUrl: item.logoURI || defaultLogoUrl,
               tokenName: item.name || '',
               tokenDecimal: Number(exchanges[item.address].d),
-              balance: '-'
-            });
+              balance: '-',
+            })
           }
-        });
+        })
       } else {
-        allList.map(item => {
+        allList.map((item) => {
           if (item.address) {
             list.push({
               tokenAddress: item.address,
@@ -157,179 +157,178 @@ class Tokens extends React.Component {
                 exchanges[item.address] && exchanges[item.address].d
                   ? Number(exchanges[item.address].d)
                   : item.decimals,
-              balance: '-'
-            });
+              balance: '-',
+            })
           }
-        });
+        })
       }
 
-      solor.map(token => {
+      solor.map((token) => {
         token.addressV1 =
           allExchanges && allExchanges[0] && allExchanges[0][token.tokenAddress]
             ? allExchanges[0][token.tokenAddress].e
-            : null;
+            : null
         token.addressV2 =
           allExchanges && allExchanges[1] && allExchanges[1][token.tokenAddress]
             ? allExchanges[1][token.tokenAddress].e
-            : null;
+            : null
         if (version === 'v1.0') {
           token.address =
             allExchanges && allExchanges[0] && allExchanges[0][token.tokenAddress]
               ? allExchanges[0][token.tokenAddress].e
-              : null;
+              : null
         } else {
           token.address =
             allExchanges && allExchanges[1] && allExchanges[1][token.tokenAddress]
               ? allExchanges[1][token.tokenAddress].e
-              : null;
+              : null
         }
-      });
-      const newSolor = solor.slice();
-      solor.map(token => {
-
-        const findIndex = _.findIndex(list, item => {
-          return item.tokenAddress === token.tokenAddress;
-        });
+      })
+      const newSolor = solor.slice()
+      solor.map((token) => {
+        const findIndex = _.findIndex(list, (item) => {
+          return item.tokenAddress === token.tokenAddress
+        })
         if (findIndex >= 0) {
-          _.remove(newSolor, itm => {
-            return itm.tokenAddress === token.tokenAddress;
-          });
+          _.remove(newSolor, (itm) => {
+            return itm.tokenAddress === token.tokenAddress
+          })
         }
-      });
-      list = [trxData].concat(newSolor, list);
-      const allTokenList = [];
-      const tokenList = [];
-      const tokenMap = {};
-      list.map(token => {
-        allTokenList.push(token);
-        tokenList.push(token);
-        tokenMap[token.tokenAddress] = token;
-      });
+      })
+      list = [trxData].concat(newSolor, list)
+      const allTokenList = []
+      const tokenList = []
+      const tokenMap = {}
+      list.map((token) => {
+        allTokenList.push(token)
+        tokenList.push(token)
+        tokenMap[token.tokenAddress] = token
+      })
 
-      this.state.tokenMap = tokenMap;
+      this.state.tokenMap = tokenMap
       this.setState({ allTokenList, tokenList }, () => {
-        this.getTokenBalance();
-        cb && cb();
-      });
+        this.getTokenBalance()
+        cb && cb()
+      })
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   getTokenBalance = async () => {
-    const address = window.defaultAccount;
-    const { tokenList, tokenMap } = this.state;
-    const tokens = [];
-    tokenList.map(t => {
-      tokens.push(t.tokenAddress);
-    });
+    const address = window.defaultAccount
+    const { tokenList, tokenMap } = this.state
+    const tokens = []
+    tokenList.map((t) => {
+      tokens.push(t.tokenAddress)
+    })
 
     if (address) {
-      await getBalancePro(address, tokens, tokenMap);
-      this.setState({});
+      await getBalancePro(address, tokens, tokenMap)
+      this.setState({})
     }
-  };
+  }
 
   showModal = async () => {
-    if (this.props.disabled) return;
+    if (this.props.disabled) return
 
     try {
-      this.props.pool.getTokensDataFromLocal();
+      this.props.pool.getTokensDataFromLocal()
       await this.setTokenList(() => {
-        const { tokenStr } = this.state;
+        const { tokenStr } = this.state
         this.onTokenStrChange({ target: { value: tokenStr } }, () => {
-          this.setState({ modalVisible: true, defaultStatus: 1 });
-        });
-      });
+          this.setState({ modalVisible: true, defaultStatus: 1 })
+        })
+      })
     } catch (error) {
-      console.log('tokenModal err', error);
+      console.log('tokenModal err', error)
 
-      this.setState({ modalVisible: true });
-      this.getTokenBalance();
+      this.setState({ modalVisible: true })
+      this.getTokenBalance()
     }
-  };
+  }
 
-  calcItem = async item => {
-    const swapVersion = window.localStorage.getItem('swapVersion');
-    const { allExchanges = {} } = this.props.pool;
-    const factory1 = Config.contract.factory;
-    const factory2 = Config.sunContract.factory;
-    const addressV1 = (allExchanges[0][item.tokenAddress] && allExchanges[0][item.tokenAddress].e) || null;
-    const addressV2 = (allExchanges[1][item.tokenAddress] && allExchanges[1][item.tokenAddress].e) || null;
+  calcItem = async (item) => {
+    const swapVersion = window.localStorage.getItem('swapVersion')
+    const { allExchanges = {} } = this.props.pool
+    const factory1 = Config.contract.factory
+    const factory2 = Config.sunContract.factory
+    const addressV1 = (allExchanges[0][item.tokenAddress] && allExchanges[0][item.tokenAddress].e) || null
+    const addressV2 = (allExchanges[1][item.tokenAddress] && allExchanges[1][item.tokenAddress].e) || null
     if (!addressV1) {
-      const addrV1 = await getExchangeAddr(item.tokenAddress, factory1);
+      const addrV1 = await getExchangeAddr(item.tokenAddress, factory1)
       if (addrV1) {
-        item.addressV1 = addrV1;
-        item.notCreatedV1 = false;
+        item.addressV1 = addrV1
+        item.notCreatedV1 = false
         if (swapVersion === 'v1.0') {
-          item.address = addrV1;
-          await this.removeSolor(item);
-          await this.addSolor(item);
+          item.address = addrV1
+          await this.removeSolor(item)
+          await this.addSolor(item)
         }
       } else if (item.tokenAddress !== Config.trxFakeAddress) {
-        item.notCreatedV1 = true;
+        item.notCreatedV1 = true
       }
     }
 
     if (item.addressV1 && item.cst === 2) {
-      const exRes = await isPairs(item.addressV1);
+      const exRes = await isPairs(item.addressV1)
       if (!exRes.gt(0) && item.tokenAddress !== Config.trxFakeAddress) {
-        item.notCreatedV1 = true;
+        item.notCreatedV1 = true
       } else {
-        item.notCreatedV1 = false;
+        item.notCreatedV1 = false
       }
     }
     if (!addressV2) {
-      const addrV2 = await getExchangeAddr(item.tokenAddress, factory2);
+      const addrV2 = await getExchangeAddr(item.tokenAddress, factory2)
       if (addrV2) {
-        item.addressV2 = addrV2;
-        item.notCreatedV2 = false;
+        item.addressV2 = addrV2
+        item.notCreatedV2 = false
         if (swapVersion === 'v1.5') {
-          item.address = addrV2;
-          await this.removeSolor(item);
-          await this.addSolor(item);
+          item.address = addrV2
+          await this.removeSolor(item)
+          await this.addSolor(item)
         }
       } else if (item.tokenAddress !== Config.trxFakeAddress) {
-        item.notCreatedV2 = true;
+        item.notCreatedV2 = true
       }
     }
 
     if (item.addressV2 && item.cst === 2) {
-      const exRes = await isPairs(item.addressV2);
+      const exRes = await isPairs(item.addressV2)
       if (!exRes.gt(0) && item.tokenAddress !== Config.trxFakeAddress) {
-        item.notCreatedV2 = true;
+        item.notCreatedV2 = true
       } else {
-        item.notCreatedV2 = false;
+        item.notCreatedV2 = false
       }
     }
 
-    return item;
-  };
+    return item
+  }
 
   setTokenAddressCallback = () => {
-    const { selectSearchItem } = this.state;
+    const { selectSearchItem } = this.state
 
-    this.setState({ dealWarningVisible: false });
-    this.props.onChange && this.props.onChange(this.state.tokenMap[selectSearchItem.tokenAddress]);
-  };
+    this.setState({ dealWarningVisible: false })
+    this.props.onChange && this.props.onChange(this.state.tokenMap[selectSearchItem.tokenAddress])
+  }
 
   setTokenAddress = async (tokenAddress, showModal, type) => {
-    const { exchanges = {}, allExchanges = {} } = this.props.pool;
+    const { exchanges = {}, allExchanges = {} } = this.props.pool
     if (tokenAddress && this.state.tokenMap[tokenAddress]) {
       if (type === 'swap' && Object.keys(Config.deflationToken).includes(tokenAddress)) {
         this.setState({
           dealWarningVisible: true,
           callbacks: this.setTokenAddressCallback,
-          selectSearchItem: { tokenAddress }
-        });
-        return;
+          selectSearchItem: { tokenAddress },
+        })
+        return
       }
-      this.props.onChange && this.props.onChange(this.state.tokenMap[tokenAddress]);
+      this.props.onChange && this.props.onChange(this.state.tokenMap[tokenAddress])
     } else if (isAddress(tokenAddress) && showModal) {
       // } else if (isAddress(tokenAddress)) {
-      const res = await scanApi.tokenBrief(tokenAddress);
+      const res = await scanApi.tokenBrief(tokenAddress)
       if (res.success) {
-        const data = res.data;
+        const data = res.data
         if (data.tokenAddr) {
           const token = {
             tokenAddress,
@@ -341,21 +340,21 @@ class Tokens extends React.Component {
             tokenName: data.tokenName,
             tokenDecimal: data.tokenDecimal,
             cst: 1,
-            balance: '-'
-          };
-          const res = await this.calcItem(token);
+            balance: '-',
+          }
+          const res = await this.calcItem(token)
           this.setState({
             tokenBrief: res,
-            solorModalVisible: true
-          });
+            solorModalVisible: true,
+          })
         }
       }
     } else if (isAddress(tokenAddress)) {
-      const res = await scanApi.tokenBrief(tokenAddress);
+      const res = await scanApi.tokenBrief(tokenAddress)
       if (res.success) {
-        const data = res.data;
+        const data = res.data
         if (data.tokenAddr) {
-          const version = window.localStorage.getItem('swapVersion');
+          const version = window.localStorage.getItem('swapVersion')
           const token = {
             tokenAddress,
             address: data.exchangeAddr,
@@ -366,78 +365,78 @@ class Tokens extends React.Component {
             tokenName: data.tokenName,
             tokenDecimal: data.tokenDecimal,
             cst: 1,
-            balance: '-'
-          };
-          const res = await this.calcItem(token);
+            balance: '-',
+          }
+          const res = await this.calcItem(token)
           this.setState({
             tokenBrief: res,
-            solorModalVisible: true
-          });
+            solorModalVisible: true,
+          })
         }
       }
     }
-  };
+  }
 
   onChange = async (item, e) => {
-    e.stopPropagation();
-    if (item.tokenAddress === this.props.value) return;
+    e.stopPropagation()
+    if (item.tokenAddress === this.props.value) return
     if (this.props.fromPool && item.tokenAddress === Config.trxFakeAddress) {
-      return;
+      return
     }
-    const type = this.props.type;
+    const type = this.props.type
     if ((type === 1 || type === 2) && Object.keys(Config.deflationToken).includes(item.tokenAddress)) {
       this.setState({
         modalVisible: false,
         dealWarningVisible: true,
         callbacks: this.selectSearchCallback,
-        selectSearchItem: item
-      });
-      return;
+        selectSearchItem: item,
+      })
+      return
     }
-    const res = await this.calcItem(item);
+    const res = await this.calcItem(item)
 
-    this.setState({ modalVisible: false });
-    this.props.onChange && this.props.onChange(res);
-  };
+    this.setState({ modalVisible: false })
+    this.props.onChange && this.props.onChange(res)
+  }
 
   selectSearchCallback = async () => {
-    const { selectSearchItem } = this.state;
-    const res = await this.calcItem(selectSearchItem);
-    this.setState({ dealWarningVisible: false });
-    this.props.onChange && this.props.onChange(res);
-  };
+    const { selectSearchItem } = this.state
+    const res = await this.calcItem(selectSearchItem)
+    this.setState({ dealWarningVisible: false })
+    this.props.onChange && this.props.onChange(res)
+  }
 
   hideModal = () => {
-    const { defaultStatus } = this.state;
+    const { defaultStatus } = this.state
     if (defaultStatus === 1) {
-      this.setState({ modalVisible: false, customTokenUriLeg: true });
+      this.setState({ modalVisible: false, customTokenUriLeg: true })
     } else {
-      this.hideListModal();
+      this.hideListModal()
     }
-  };
+  }
 
   onTokenStrChange = async (e, cb = null) => {
-    const { exchanges = {}, allExchanges = {} } = this.props.pool;
+    const { exchanges = {}, allExchanges = {} } = this.props.pool
     try {
-      const value = e.target.value;
-      const allTokenList = this.state.allTokenList;
-      let tokenList = [];
-      const { tokenSort } = this.state;
+      const value = e.target.value
+      const allTokenList = this.state.allTokenList
+      let tokenList = []
+      const { tokenSort } = this.state
       if (value.length > 1) {
         if (isAddress(value)) {
-          tokenList = allTokenList.filter(token => {
-            return token.tokenAddress === value.trim();
-          });
+          tokenList = allTokenList.filter((token) => {
+            return token.tokenAddress === value.trim()
+          })
           if (tokenList.length === 0) {
             // getData from api
-            const res = await scanApi.tokenBrief(value);
+            const res = await scanApi.tokenBrief(value)
             if (res.success) {
-              const address = window.defaultAccount;
-              const data = res.data;
+              const address = window.defaultAccount
+              const data = res.data
               // console.log(data);
-              let balance = '-';
+              let balance = '-'
               if (address) {
-                balance = await simpleGetBalance(address, [value], this.state.tokenMap);
+                balance = await simpleGetBalance(address, [value], this.state.tokenMap)
               }
               const token = {
                 tokenAddress: value,
@@ -449,363 +448,363 @@ class Tokens extends React.Component {
                 tokenName: data.tokenName,
                 tokenDecimal: data.tokenDecimal,
                 cst: 1,
-                balance: balance == '-' ? '-' : formatNumber(balance, 2)
-              };
+                balance: balance === '-' ? '-' : formatNumber(balance, 2),
+              }
 
-              tokenList.push(token);
-              allTokenList.push(token);
+              tokenList.push(token)
+              allTokenList.push(token)
             }
           }
         } else {
           tokenList = allTokenList.filter(
-            token => token.tokenSymbol.toLowerCase().indexOf(value.toLowerCase()) > -1 && Number(token.cst) !== 1
-          );
+            (token) => token.tokenSymbol.toLowerCase().indexOf(value.toLowerCase()) > -1 && Number(token.cst) !== 1,
+          )
 
           if (tokenSort) {
             tokenList = tokenList.sort((t1, t2) => {
-              const n1 = t1.tokenSymbol.toLowerCase();
-              const n2 = t2.tokenSymbol.toLowerCase();
+              const n1 = t1.tokenSymbol.toLowerCase()
+              const n2 = t2.tokenSymbol.toLowerCase()
               if (n1 < n2) {
-                return -1;
+                return -1
               }
               if (n1 > n2) {
-                return 1;
+                return 1
               }
-              return 0;
-            });
+              return 0
+            })
           }
         }
       } else {
-        tokenList = allTokenList.slice().filter(token => Number(token.cst) !== 1);
+        tokenList = allTokenList.slice().filter((token) => Number(token.cst) !== 1)
         if (tokenSort) {
           tokenList = tokenList.sort((t1, t2) => {
-            const n1 = t1.tokenSymbol.toLowerCase();
-            const n2 = t2.tokenSymbol.toLowerCase();
+            const n1 = t1.tokenSymbol.toLowerCase()
+            const n2 = t2.tokenSymbol.toLowerCase()
             if (n1 < n2) {
-              return -1;
+              return -1
             }
             if (n1 > n2) {
-              return 1;
+              return 1
             }
-            return 0;
-          });
+            return 0
+          })
         }
       }
 
       this.setState({ tokenStr: value, tokenList }, () => {
-        cb && cb();
+        cb && cb()
 
-        this.getTokenBalance();
-      });
+        this.getTokenBalance()
+      })
     } catch (err) {
-      console.log('onTokenStrChange: ', err);
+      console.log('onTokenStrChange: ', err)
     }
-  };
+  }
 
   clearStorage = () => {
-    const { localStorage } = Config;
+    const { localStorage } = Config
     for (const key in localStorage) {
-      window.localStorage.removeItem(localStorage[key]);
+      window.localStorage.removeItem(localStorage[key])
     }
-    window.location.reload();
-  };
+    window.location.reload()
+  }
 
   showListModal = () => {
-    this.setState({ defaultStatus: 2 });
-  };
+    this.setState({ defaultStatus: 2 })
+  }
 
   hideListModal = () => {
-    this.setState({ defaultStatus: 1 });
-  };
+    this.setState({ defaultStatus: 1 })
+  }
 
-  selectTokenList = async index => {
+  selectTokenList = async (index) => {
     try {
-      const { selectedListUrl } = this.props.pool;
-      this.props.pool.setData({ selectedListUrl: index });
-      this.props.pool.setTokensDataIntoLocal();
+      const { selectedListUrl } = this.props.pool
+      this.props.pool.setData({ selectedListUrl: index })
+      this.props.pool.setTokensDataIntoLocal()
 
-      await this.setTokenList(() => {
-        this.setState({
-          defaultStatus: 1
-        });
-        const { tokenStr } = this.state;
-        this.onTokenStrChange({ target: { value: tokenStr } });
-      });
-      this.props.pool.handleNotifiction();
-
-      this.props.pool.setTokensDataIntoLocal();
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  backTokensCategory = () => {
-    this.setState({
-      changeStatus: 1
-    });
-  };
-
-  onTokenUriChange = e => {
-    try {
-      const value = e.target.value;
-
-      this.setState({ customTokenUri: value.trim(), errInfo: '' });
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  checkUrl = value => {
-    const errInfo = '';
-    const isUrl = value;
-
-    if (!isUrl) {
-      errInfo = intl.get('list.err1');
-    }
-    return errInfo;
-  };
-
-  isListsOver = (lists = {}) => {
-    return Object.keys(lists).length >= Config.maxLists;
-  };
-
-  addCustomTokens = async () => {
-    try {
-      const { customTokenUri } = this.state;
-      let errInfo = '';
-      if (!isValidURL(customTokenUri)) {
-        errInfo = intl.get('list.add_failed_tip');
-        this.setState({ errInfo });
-        return;
-      }
-      const { byUrl = {} } = this.props.pool;
-
-      if (byUrl[customTokenUri] && !byUrl[customTokenUri].rs) {
-        errInfo = intl.get('list.exists');
-        this.setState({ errInfo });
-        return;
-      }
-
-      if (this.isListsOver(byUrl)) {
-        errInfo = intl.getHTML('list.lists_over', { value: Config.maxLists });
-        this.setState({ errInfo });
-        return;
-      }
-      const jsonData = await scanApi.getTokenListJson(customTokenUri);
-      const { tokens = [] } = jsonData;
-
-      if (tokens.length > Config.maxTokens) {
-        errInfo = intl.getHTML('list.tokens_over', { value: Config.maxTokens });
-        this.setState({ errInfo });
-        return;
-      }
-
-      const { key = '', valid = false } = validateFunc(jsonData);
-
-      if (!valid) {
-        errInfo = intl.get('list.add_err_tip', { value: key });
-        this.setState({ errInfo });
-        return;
-      }
-      this.props.pool.updateTokensData(customTokenUri, { ...jsonData, uri: customTokenUri, rs: 0 });
       await this.setTokenList(() => {
         this.setState({
           defaultStatus: 1,
-          customTokenUri: ''
-        });
-        const { tokenStr } = this.state;
-        this.onTokenStrChange({ target: { value: tokenStr } });
-      });
-    } catch (err) {
-      const errInfo = intl.get('list.add_failed_retry');
-      this.setState({ errInfo });
-      console.log(err);
-    }
-  };
+        })
+        const { tokenStr } = this.state
+        this.onTokenStrChange({ target: { value: tokenStr } })
+      })
+      this.props.pool.handleNotifiction()
 
-  updateList = async item => {
-    const { uri } = item;
-    const { byUrlNew = {} } = this.props.pool;
-    const n = byUrlNew[uri];
+      this.props.pool.setTokensDataIntoLocal()
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  backTokensCategory = () => {
+    this.setState({
+      changeStatus: 1,
+    })
+  }
+
+  onTokenUriChange = (e) => {
+    try {
+      const value = e.target.value
+
+      this.setState({ customTokenUri: value.trim(), errInfo: '' })
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  checkUrl = (value) => {
+    const errInfo = ''
+    const isUrl = value
+
+    if (!isUrl) {
+      errInfo = intl.get('list.err1')
+    }
+    return errInfo
+  }
+
+  isListsOver = (lists = {}) => {
+    return Object.keys(lists).length >= Config.maxLists
+  }
+
+  addCustomTokens = async () => {
+    try {
+      const { customTokenUri } = this.state
+      let errInfo = ''
+      if (!isValidURL(customTokenUri)) {
+        errInfo = intl.get('list.add_failed_tip')
+        this.setState({ errInfo })
+        return
+      }
+      const { byUrl = {} } = this.props.pool
+
+      if (byUrl[customTokenUri] && !byUrl[customTokenUri].rs) {
+        errInfo = intl.get('list.exists')
+        this.setState({ errInfo })
+        return
+      }
+
+      if (this.isListsOver(byUrl)) {
+        errInfo = intl.getHTML('list.lists_over', { value: Config.maxLists })
+        this.setState({ errInfo })
+        return
+      }
+      const jsonData = await scanApi.getTokenListJson(customTokenUri)
+      const { tokens = [] } = jsonData
+
+      if (tokens.length > Config.maxTokens) {
+        errInfo = intl.getHTML('list.tokens_over', { value: Config.maxTokens })
+        this.setState({ errInfo })
+        return
+      }
+
+      const { key = '', valid = false } = validateFunc(jsonData)
+
+      if (!valid) {
+        errInfo = intl.get('list.add_err_tip', { value: key })
+        this.setState({ errInfo })
+        return
+      }
+      this.props.pool.updateTokensData(customTokenUri, { ...jsonData, uri: customTokenUri, rs: 0 })
+      await this.setTokenList(() => {
+        this.setState({
+          defaultStatus: 1,
+          customTokenUri: '',
+        })
+        const { tokenStr } = this.state
+        this.onTokenStrChange({ target: { value: tokenStr } })
+      })
+    } catch (err) {
+      const errInfo = intl.get('list.add_failed_retry')
+      this.setState({ errInfo })
+      console.log(err)
+    }
+  }
+
+  updateList = async (item) => {
+    const { uri } = item
+    const { byUrlNew = {} } = this.props.pool
+    const n = byUrlNew[uri]
     clickUpgrade(n, async () => {
-      await this.props.pool.updateByUrl(n);
-      this.setState({});
-    });
-  };
+      await this.props.pool.updateByUrl(n)
+      this.setState({})
+    })
+  }
 
   hideRemoveModal = () => {
-    this.setState({ removeId: '', removeModalVisible: false, removeText: '' });
-  };
+    this.setState({ removeId: '', removeModalVisible: false, removeText: '' })
+  }
 
-  showRemoveModal = item => {
+  showRemoveModal = (item) => {
     try {
-      this.setState({ removeId: item.uri, removeModalVisible: true });
+      this.setState({ removeId: item.uri, removeModalVisible: true })
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   removeTokens = () => {
     try {
-      const { removeId, removeText } = this.state;
-      if (!removeId) return;
-      if (removeText.trim() != REMOVE_TEXT) return;
-      const { byUrl = {} } = this.props.pool;
-      const item = byUrl[removeId];
-      const { cst = false, uri = '' } = item;
+      const { removeId, removeText } = this.state
+      if (!removeId) return
+      if (removeText.trim() !== REMOVE_TEXT) return
+      const { byUrl = {} } = this.props.pool
+      const item = byUrl[removeId]
+      const { cst = false, uri = '' } = item
       if (cst) {
-        this.props.pool.deleteByUrlById(uri);
+        this.props.pool.deleteByUrlById(uri)
       } else {
-        item.rs = 1;
-        this.props.pool.updateByUrl(item);
+        item.rs = 1
+        this.props.pool.updateByUrl(item)
       }
-      this.hideRemoveModal();
+      this.hideRemoveModal()
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  inputRemoveText = e => {
-    const value = e.target.value;
-    this.setState({ removeText: value });
-  };
+  inputRemoveText = (e) => {
+    const value = e.target.value
+    this.setState({ removeText: value })
+  }
 
-  addSolor = async item => {
+  addSolor = async (item) => {
     try {
-      const { solor = [] } = this.props.pool;
-      const findIndex = _.findIndex(solor, token => {
-        return token.tokenAddress === item.tokenAddress;
-      });
-      if (findIndex >= 0) return;
-      solor.unshift({ ...item, cst: 2 });
-      this.props.pool.setData({ solor });
+      const { solor = [] } = this.props.pool
+      const findIndex = _.findIndex(solor, (token) => {
+        return token.tokenAddress === item.tokenAddress
+      })
+      if (findIndex >= 0) return
+      solor.unshift({ ...item, cst: 2 })
+      this.props.pool.setData({ solor })
       await this.setTokenList(() => {
-        const { tokenStr } = this.state;
+        const { tokenStr } = this.state
         this.onTokenStrChange({ target: { value: tokenStr } }, () => {
-          this.getTokenBalance();
-        });
-      });
-      window.localStorage.setItem('solor', JSON.stringify(solor));
+          this.getTokenBalance()
+        })
+      })
+      window.localStorage.setItem('solor', JSON.stringify(solor))
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  removeSolor = async item => {
+  removeSolor = async (item) => {
     try {
       if (item.tokenAddress === this.props.value || item.tokenAddress === this.props.switchValue) {
-        return;
+        return
       }
-      const { solor = [] } = this.props.pool;
-      const { tokenAddress } = item;
-      _.remove(solor, itm => {
-        return itm.tokenAddress === tokenAddress;
-      });
-      this.props.pool.setData({ solor });
+      const { solor = [] } = this.props.pool
+      const { tokenAddress } = item
+      _.remove(solor, (itm) => {
+        return itm.tokenAddress === tokenAddress
+      })
+      this.props.pool.setData({ solor })
       await this.setTokenList(() => {
-        const { tokenStr } = this.state;
+        const { tokenStr } = this.state
         this.onTokenStrChange({ target: { value: tokenStr } }, () => {
-          this.getTokenBalance();
-        });
-      });
-      window.localStorage.setItem('solor', JSON.stringify(solor));
+          this.getTokenBalance()
+        })
+      })
+      window.localStorage.setItem('solor', JSON.stringify(solor))
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  getKeys = byUrl => {
+  getKeys = (byUrl) => {
     try {
-      const keys = Object.keys(byUrl);
+      const keys = Object.keys(byUrl)
       const keysArr = keys.sort((a, b) => {
-        return byUrl[a].name > byUrl[b].name ? 1 : -1;
-      });
-      return keysArr;
+        return byUrl[a].name > byUrl[b].name ? 1 : -1
+      })
+      return keysArr
     } catch (err) {
-      return [];
+      return []
     }
-  };
+  }
 
-  tokenSortByAsCII = tokenSort => {
+  tokenSortByAsCII = (tokenSort) => {
     try {
-      let { tokenList } = this.state;
-      tokenSort = !tokenSort;
+      let { tokenList } = this.state
+      tokenSort = !tokenSort
       if (tokenSort) {
         let tokensListSort = tokenList.sort((t1, t2) => {
-          const n1 = t1.tokenSymbol.toLowerCase();
-          const n2 = t2.tokenSymbol.toLowerCase();
+          const n1 = t1.tokenSymbol.toLowerCase()
+          const n2 = t2.tokenSymbol.toLowerCase()
           if (n1 < n2) {
-            return -1;
+            return -1
           }
           if (n1 > n2) {
-            return 1;
+            return 1
           }
-          return 0;
-        });
+          return 0
+        })
 
-        const i = _.findIndex(tokensListSort, o => {
-          return o.tokenAddress === Config.trxFakeAddress;
-        });
+        const i = _.findIndex(tokensListSort, (o) => {
+          return o.tokenAddress === Config.trxFakeAddress
+        })
         if (i >= 0) {
-          const trxData = tokensListSort.splice(i, 1);
-          tokensListSort.unshift(trxData[0]);
+          const trxData = tokensListSort.splice(i, 1)
+          tokensListSort.unshift(trxData[0])
         }
-        this.setState({ tokenList: tokensListSort });
+        this.setState({ tokenList: tokensListSort })
       } else {
         this.setTokenList(() => {
-          const { tokenStr } = this.state;
+          const { tokenStr } = this.state
           this.onTokenStrChange({ target: { value: tokenStr } }, () => {
-            this.getTokenBalance();
-          });
-        });
+            this.getTokenBalance()
+          })
+        })
       }
-      this.setState({ tokenSort });
+      this.setState({ tokenSort })
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   comfirmContinue = async () => {
     try {
-      const { tokenBrief, checkStatus } = this.state;
-      if (!checkStatus) return;
+      const { tokenBrief, checkStatus } = this.state
+      if (!checkStatus) return
       if (Object.keys(Config.deflationToken).includes(tokenBrief.tokenAddress)) {
-        this.setState({ solorModalVisible: false, dealWarningVisible: true, callbacks: this.dealWarningCallback });
-        return;
+        this.setState({ solorModalVisible: false, dealWarningVisible: true, callbacks: this.dealWarningCallback })
+        return
       }
-      await this.addSolor(tokenBrief);
-      this.setState({ solorModalVisible: false });
-      this.props.onChange && this.props.onChange(tokenBrief);
+      await this.addSolor(tokenBrief)
+      this.setState({ solorModalVisible: false })
+      this.props.onChange && this.props.onChange(tokenBrief)
     } catch (err) {
-      console.log(err);
-      this.setState({ dealWarningVisible: false, solorModalVisible: false });
+      console.log(err)
+      this.setState({ dealWarningVisible: false, solorModalVisible: false })
     }
-  };
+  }
 
   dealWarningCallback = async () => {
     try {
-      this.setState({ dealWarningVisible: false });
+      this.setState({ dealWarningVisible: false })
       // todo
-      const { tokenBrief } = this.state;
-      await this.addSolor(tokenBrief);
-      this.setState({ solorModalVisible: false });
-      this.props.onChange && this.props.onChange(tokenBrief);
+      const { tokenBrief } = this.state
+      await this.addSolor(tokenBrief)
+      this.setState({ solorModalVisible: false })
+      this.props.onChange && this.props.onChange(tokenBrief)
     } catch (err) {
-      console.log(err);
-      this.setState({ dealWarningVisible: false, solorModalVisible: false });
+      console.log(err)
+      this.setState({ dealWarningVisible: false, solorModalVisible: false })
     }
-  };
+  }
 
-  changeCheckStatus = e => {
+  changeCheckStatus = (e) => {
     this.setState({
-      checkStatus: e.target.checked
-    });
-  };
+      checkStatus: e.target.checked,
+    })
+  }
 
   renderSelectedList = (byUrl, selectedListUrl, tokenStr, tokenList, allTokenList) => {
-    let { tokenSort, tokenMap } = this.state;
+    let { tokenSort, tokenMap } = this.state
     if (!byUrl || !selectedListUrl || !byUrl[selectedListUrl]) {
-      return <></>;
+      return <></>
     }
     return (
       <>
@@ -837,15 +836,15 @@ class Tokens extends React.Component {
                       : '')
                   }
                   key={item.tokenAddress + key}
-                  onClick={e => this.onChange(item, e)}
+                  onClick={(e) => this.onChange(item, e)}
                 >
                   <div className="a-center">
                     <img
                       src={item.tokenLogoUrl}
                       alt=""
-                      onError={e => {
-                        e.target.onerror = null;
-                        e.target.src = defaultLogoUrl;
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = defaultLogoUrl
                       }}
                     />
                     <div className="searchRes left">
@@ -854,10 +853,10 @@ class Tokens extends React.Component {
                         {this.props.fromPool
                           ? ''
                           : this.props.asInput
-                            ? (item.tokenAddress === this.props.value && ` (${intl.get('tokens.selected_as_input')})`) ||
+                          ? (item.tokenAddress === this.props.value && ` (${intl.get('tokens.selected_as_input')})`) ||
                             (item.tokenAddress === this.props.switchValue &&
                               ` (${intl.get('tokens.selected_as_output')})`)
-                            : (item.tokenAddress === this.props.value && ` (${intl.get('tokens.selected_as_output')})`) ||
+                          : (item.tokenAddress === this.props.value && ` (${intl.get('tokens.selected_as_output')})`) ||
                             (item.tokenAddress === this.props.switchValue &&
                               ` (${intl.get('tokens.selected_as_input')})`)}
                       </span>
@@ -867,9 +866,9 @@ class Tokens extends React.Component {
                           <span>{intl.get('list.search_by_addr')}</span>
                           <span
                             className="ib"
-                            onClick={e => {
-                              e.stopPropagation();
-                              this.addSolor(item);
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              this.addSolor(item)
                             }}
                           >
                             {'('}
@@ -883,9 +882,9 @@ class Tokens extends React.Component {
                           <span>{intl.get('list.add_by_user')}</span>
                           <span
                             className="solor-remove ib"
-                            onClick={e => {
-                              e.stopPropagation();
-                              this.removeSolor(item);
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              this.removeSolor(item)
                             }}
                           >
                             {'('}
@@ -900,7 +899,7 @@ class Tokens extends React.Component {
                     <div>
                       <p>
                         {formatNumberNew(
-                          tokenMap[item.tokenAddress] ? tokenMap[item.tokenAddress].balance : item.balance
+                          tokenMap[item.tokenAddress] ? tokenMap[item.tokenAddress].balance : item.balance,
                         )}
                       </p>
                     </div>
@@ -919,7 +918,7 @@ class Tokens extends React.Component {
                     </div>
                   )}
                 </div>
-              );
+              )
             })
           ) : (
             <div className="no-token-fund">{intl.getHTML('list.no_token_found')}</div>
@@ -935,47 +934,47 @@ class Tokens extends React.Component {
           </button>
         </div>
       </>
-    );
-  };
+    )
+  }
 
-  renderUpdateListItem = item => {
-    const { byUrlNew = {} } = this.props.pool;
-    const { version = {}, uri } = item;
-    const n = byUrlNew[uri] || {};
-    const nVersion = n.version || {};
-    const isVersionLater = checkVersionLater(version, nVersion);
-    const { success = false } = checkTokenChanged(item, n);
+  renderUpdateListItem = (item) => {
+    const { byUrlNew = {} } = this.props.pool
+    const { version = {}, uri } = item
+    const n = byUrlNew[uri] || {}
+    const nVersion = n.version || {}
+    const isVersionLater = checkVersionLater(version, nVersion)
+    const { success = false } = checkTokenChanged(item, n)
     return (
       !_.isEqual(n, {}) &&
       isVersionLater &&
       success && (
         <Menu.Item
           onClick={() => {
-            this.updateList(item);
+            this.updateList(item)
           }}
         >
           {intl.get('list.update')}
         </Menu.Item>
       )
-    );
-  };
+    )
+  }
 
-  adjustAndroid = status => {
-    let adjust = adjustAndroid(status);
-    this.setState({ adjust });
-  };
+  adjustAndroid = (status) => {
+    let adjust = adjustAndroid(status)
+    this.setState({ adjust })
+  }
 
   renderTokensCategory = () => {
-    const { customTokenUri, lang, errInfo } = this.state;
-    const { byUrl, selectedListUrl } = this.props.pool;
-    const keysArr = this.getKeys(byUrl);
+    const { customTokenUri, lang, errInfo } = this.state
+    const { byUrl, selectedListUrl } = this.props.pool
+    const keysArr = this.getKeys(byUrl)
     return (
       <>
         <ul className="list-list">
           {byUrl &&
             keysArr.length &&
-            keysArr.map(i => {
-              const item = byUrl[i];
+            keysArr.map((i) => {
+              const item = byUrl[i]
               return (
                 !item.rs && (
                   <li key={item.name + '_' + i} className="flex">
@@ -1013,7 +1012,7 @@ class Tokens extends React.Component {
                               {item.uri !== selectedListUrl && (
                                 <Menu.Item
                                   onClick={() => {
-                                    this.showRemoveModal(item);
+                                    this.showRemoveModal(item)
                                   }}
                                 >
                                   {intl.get('list.remove')}
@@ -1023,7 +1022,7 @@ class Tokens extends React.Component {
                           </Menu>
                         }
                       >
-                        <a className="ant-dropdown-link" onClick={e => e.preventDefault()}></a>
+                        <a className="ant-dropdown-link" onClick={(e) => e.preventDefault()}></a>
                       </Dropdown>
                     </div>
                     <div className="right">
@@ -1038,7 +1037,7 @@ class Tokens extends React.Component {
                     </div>
                   </li>
                 )
-              );
+              )
             })}
           <div className="list-more">
             <a href={lang === 'en-US' ? Config.moreList.en : Config.moreList.zh} target="_blank">
@@ -1076,12 +1075,12 @@ class Tokens extends React.Component {
           </a>
         </div>
       </>
-    );
-  };
+    )
+  }
 
   hideSolorModal = () => {
-    this.setState({ solorModalVisible: false });
-  };
+    this.setState({ solorModalVisible: false })
+  }
 
   render() {
     const {
@@ -1098,10 +1097,10 @@ class Tokens extends React.Component {
       checkStatus,
       dealWarningVisible,
       callbacks,
-      selectSearchItem
-    } = this.state;
-    const { value, tokenInfo } = this.props;
-    const { byUrl, selectedListUrl } = this.props.pool;
+      selectSearchItem,
+    } = this.state
+    const { value, tokenInfo } = this.props
+    const { byUrl, selectedListUrl } = this.props.pool
     return (
       <React.Fragment>
         <p className={'dragDown ' + (this.props.disabled ? 'no-bg' : '')} onClick={this.showModal}>
@@ -1110,9 +1109,9 @@ class Tokens extends React.Component {
               <img
                 src={tokenInfo.tokenLogoUrl || defaultLogoUrl}
                 alt=""
-                onError={e => {
-                  e.target.onerror = null;
-                  e.target.src = defaultLogoUrl;
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = defaultLogoUrl
                 }}
               />
               <span>{tokenInfo.tokenSymbol}</span>
@@ -1202,8 +1201,8 @@ class Tokens extends React.Component {
                     className="pointer"
                     title={tokenBrief.tokenAddress}
                     id="copySpan"
-                    onClick={e => {
-                      copyToClipboard(e, '5px', 'copySpan');
+                    onClick={(e) => {
+                      copyToClipboard(e, '5px', 'copySpan')
                     }}
                   >
                     <CopyOutlined />
@@ -1229,8 +1228,8 @@ class Tokens extends React.Component {
           />
         )}
       </React.Fragment>
-    );
+    )
   }
 }
 
-export default Tokens;
+export default Tokens

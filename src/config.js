@@ -26,8 +26,8 @@ const Config = {
   },
   v2Contract: {
     poly: 'THAALWtwcxUxuSJ8h4ZSZGzzTaYhVQaNPf',
-    factory: 'TKWJdrQkqHisa1X8HUdHEfREvTzw4pMAaY',
-    router: 'TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax',
+    factory: 'TPvaMEL5oY2gWsJv7MDjNQh2dohwvwwVwx', //InterCroneswap
+    router: 'TNvdqHkoToRLfKqeK78nzSpcAF5dd93tPZ', // InterCroneswap
   },
   migrateContract: {
     v1: 'TRBnS7G2avcryeXtUAQ66mikec4XgZHSCd',
@@ -60,7 +60,7 @@ const Config = {
   miningLink: '/mining',
   justLink: 'https://just.tronscan.io/',
   helpCenterLink: 'https://sunswap.zendesk.com/hc/',
-  swapService: 'https://abc.ablesdxd.link/swap',
+  swapService: 'http://localhost:18098/swap',
   swapServiceV2: 'https://pabc.ablesdxd.link/swapv2',
   timeService: 'https://labc.ablesdxd.link/defi/baseInfo',
 
