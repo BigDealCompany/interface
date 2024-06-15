@@ -1,37 +1,37 @@
-const env = process.env.REACT_APP_ENV;
+const env = process.env.REACT_APP_ENV
 
-const tokenInfo = require(`./token.js`).default;
-let devTokenInfo = {};
+const tokenInfo = require(`./token.js`).default
+let devTokenInfo = {}
 if (env === 'test' || env === 'qaTest') {
-  devTokenInfo = require(`./token.test.js`).default;
+  devTokenInfo = require(`./token.test.js`).default
 }
-const TOKENS = Object.assign(tokenInfo, devTokenInfo);
+const TOKENS = Object.assign(tokenInfo, devTokenInfo)
 const Config = {
   version: 'v2.0.4',
   chain: {
     privateKey: '01',
-    fullHost: 'https://api.trongrid.io'
+    fullHost: 'https://api.trongrid.io',
   },
   trongrid: {
     host: 'https://api.trongrid.io',
-    key: ''
+    key: 'e15544ca-e0b1-418f-bd68-5fdfc41c9ce0',
   },
   contract: {
     factory: 'TXk8rQSAvPvBBNtqSoY6nCfsXWCSSpTVQF',
-    poly: 'TCNYd8L5hBey9FwPpvgtvDaY2cHjMFVLZu'
+    poly: 'TCNYd8L5hBey9FwPpvgtvDaY2cHjMFVLZu',
   },
   sunContract: {
     factory: 'TB2LM4iegvhPJGWn9qizeefkPMm7bqqaMs',
-    poly: 'TTyiD8XFdzGg1pgfLgRVKHFNqodCpLhNEn'
+    poly: 'TTyiD8XFdzGg1pgfLgRVKHFNqodCpLhNEn',
   },
   v2Contract: {
     poly: 'THAALWtwcxUxuSJ8h4ZSZGzzTaYhVQaNPf',
     factory: 'TKWJdrQkqHisa1X8HUdHEfREvTzw4pMAaY',
-    router: 'TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax'
+    router: 'TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax',
   },
   migrateContract: {
     v1: 'TRBnS7G2avcryeXtUAQ66mikec4XgZHSCd',
-    v15: 'TKFoQ8MdMvtDLHmQqTdbAzKw4D3iSwE5Jp'
+    v15: 'TKFoQ8MdMvtDLHmQqTdbAzKw4D3iSwE5Jp',
   },
   MAX_HOPS: 3,
   wtrxAddress: 'TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR',
@@ -46,7 +46,7 @@ const Config = {
     newSunDecimal: 18,
     newSunToken: 'TSSMHYeV2uE9qYH95DqyoCuNCzEL1NvU3S',
     newSunPrice: '1000',
-    maxBtnDecimal: 6
+    maxBtnDecimal: 6,
   },
   addLink: '#/add',
   homeLink: '#/v2',
@@ -89,7 +89,7 @@ const Config = {
     balance: '/api/wallet/balance',
     tronbullContestBillboard: 'sunProject/tronbullContestBillboard',
     tronbullContestDetail: 'sunProject/tronbullContestDetail',
-    burnLog: '/v2/burnLog'
+    burnLog: '/v2/burnLog',
   },
   swapApiPathV2: {
     statusinfo: '/scan/getStatusInfo',
@@ -102,21 +102,21 @@ const Config = {
     transactions: '/scan/getTransactions',
     searchTokenList: '/scan/searchTokenList',
     searchPairList: '/scan/searchPairList',
-    liquidityuser: '/liquidityuser'
+    liquidityuser: '/liquidityuser',
   },
   localStorage: {
     exchangesKey: 'exchanges',
     exchangesFilterKey: 'exchangesFilter',
     tokensKey: 'tokens',
     tokensFilterKey: 'tokensFilter',
-    exchangesKeyV3: 'exchangesV3'
+    exchangesKeyV3: 'exchangesV3',
   },
   localStorageV2: {
     swapV2exchangesKey: 'swapV2exchanges',
     swapV2exchangesFilterKey: 'swapV2exchangesFilter',
     swapV2tokensKey: 'swapV2tokens',
     swapV2tokensFilterKey: 'swapV2tokensFilter',
-    swapV2exchangesKeyV3: 'swapV2exchangesV3'
+    swapV2exchangesKeyV3: 'swapV2exchangesV3',
   },
   klineService: 'https://apilist.tronscan.io/api/justswap/kline',
   telegram: 'https://t.me/SunSwapOfficial',
@@ -145,7 +145,7 @@ const Config = {
   maxTokens: 100,
   showMax: 30,
   loginType: {
-    tronlink: 'TRONLINK'
+    tronlink: 'TRONLINK',
   },
   firstTRXLimit: 10,
   trxPrecision: 1e6,
@@ -156,64 +156,62 @@ const Config = {
   docLinkENV2: 'https://www.sunswap.com/docs/sunswapV2-interfaces_en.pdf',
   justList: 'https://sunlists.justnetwork.io/',
   moreList: {
-    en:
-      'https://github.com/justswaporg/justlists/issues/new?assignees=&labels=add-justlist&template=add-a-justlist.md&title=Add+JustList%3A+%7BJustList+name%7D',
-    zh:
-      'https://github.com/justswaporg/justlists/issues/new?assignees=&labels=add-justlist&template=----justlist.md&title=%E6%B7%BB%E5%8A%A0JustList%3A+%7BJustList+name%7D'
+    en: 'https://github.com/justswaporg/justlists/issues/new?assignees=&labels=add-justlist&template=add-a-justlist.md&title=Add+JustList%3A+%7BJustList+name%7D',
+    zh: 'https://github.com/justswaporg/justlists/issues/new?assignees=&labels=add-justlist&template=----justlist.md&title=%E6%B7%BB%E5%8A%A0JustList%3A+%7BJustList+name%7D',
   },
   tvl: 'https://api.just.network/ssp/getSunIOTvl',
   fileLink: 'https://www.sunswap.com/docs/',
   whiteList: ['trx', 'usdt', 'sun'],
   TOKENS,
   deflationToken: {
-    'TXRGogRxEXVnVrQNtcayTL6zXw8fC37hbQ': {
+    TXRGogRxEXVnVrQNtcayTL6zXw8fC37hbQ: {
       slippage: '15%',
-      symbol: 'SEAD'
+      symbol: 'SEAD',
     },
-    'TRtnaVnY6HXv6H8mu1NeoYLsTdN9bABhTZ': {
+    TRtnaVnY6HXv6H8mu1NeoYLsTdN9bABhTZ: {
       slippage: '15%',
-      symbol: 'FIST'
+      symbol: 'FIST',
     },
-    'TWaaMa462AUWGnKizYM17RuXKPv6Ej1xtE': {
+    TWaaMa462AUWGnKizYM17RuXKPv6Ej1xtE: {
       slippage: '15%',
-      symbol: 'RON'
-    }
+      symbol: 'RON',
+    },
   },
   addFeeAmount: 30,
   createFeeAmount: 1000,
   addFeeAmountV2: 60,
   createFeeAmountV2: 700,
   swapFeeAmount: 30,
-  swapFeeAmountV2: 80
-};
+  swapFeeAmountV2: 80,
+}
 
-let devConfig = {};
+let devConfig = {}
 if (env === 'testPro') {
   devConfig = {
-    swapServiceV2: 'https://bcd.ablesdxd.link/swapv2'
-  };
+    swapServiceV2: 'https://bcd.ablesdxd.link/swapv2',
+  }
 } else if (env === 'test') {
   devConfig = {
     chain: {
       privateKey: '01',
-      fullHost: 'https://api.nileex.io'
+      fullHost: 'https://api.nileex.io',
     },
     contract: {
       factory: 'TXFouUxm4Qs3c1VxfQtCo4xMxbpwE3aWDM',
-      poly: 'TDhc9kfyBqjhLrwvAnZZCKCan2w8KGbJZh'
+      poly: 'TDhc9kfyBqjhLrwvAnZZCKCan2w8KGbJZh',
     },
     sunContract: {
       factory: 'TR5dL4GZ7L7whuwK9Z33AhzxapPoyPW1mL',
-      poly: 'TTbvkvzTHNwACb9hSrwcTHG6pE6GaKJ4AT'
+      poly: 'TTbvkvzTHNwACb9hSrwcTHG6pE6GaKJ4AT',
     },
     v2Contract: {
       poly: 'THKx73oAnA6kejnEBzgFkNH2mD93neqmu8',
       factory: 'THomLGMLhAjMecQf9FQjbZ8a1RtwsZLrGE',
-      router: 'TMn1qrmYUMSTXo9babrJLzepKZoPC7M6Sy'
+      router: 'TMn1qrmYUMSTXo9babrJLzepKZoPC7M6Sy',
     },
     migrateContract: {
       v1: 'TRteBL1qsDyE3jPtdLu81YRocKrwXERiN1',
-      v15: 'TDs2b8MsJGLM98TSAuPHT25rk7W9iZETfc'
+      v15: 'TDs2b8MsJGLM98TSAuPHT25rk7W9iZETfc',
     },
     wtrxAddress: 'TYsbWxNnyTgsZaTFaue9hqpxkU3Fkco94a',
     initCodeHash: '9dd9bfc2f6c1103a6c01d9c6a4044e4b8a9361f92df2728cdc3729922d56748e',
@@ -226,7 +224,7 @@ if (env === 'testPro') {
       newSunDecimal: 18,
       newSunToken: 'TDqjTkZ63yHB19w2n7vPm2qAkLHwn9fKKk',
       newSunPrice: '1000',
-      maxBtnDecimal: 6
+      maxBtnDecimal: 6,
     },
     tronscanUrl: 'https://nile.tronscan.io/#',
     swapService: 'http://123.56.166.152:10088/swap',
@@ -242,35 +240,35 @@ if (env === 'testPro') {
     fileLink: 'https://www.sunswap.com/docs/',
     klineService: 'https://nileapi.tronscan.org/api/justswap/kline',
     deflationToken: {
-      'TMsZAkG3mCztEJruT9bnfbZJ8Nk5Cq7azU': {
+      TMsZAkG3mCztEJruT9bnfbZJ8Nk5Cq7azU: {
         slippage: '15%',
-        symbol: 'SEAD'
-      }
-    }
-  };
+        symbol: 'SEAD',
+      },
+    },
+  }
 }
 if (env === 'qaTest') {
   devConfig = {
     chain: {
       privateKey: '01',
-      fullHost: 'https://api.nileex.io'
+      fullHost: 'https://api.nileex.io',
     },
     contract: {
       factory: 'TXFouUxm4Qs3c1VxfQtCo4xMxbpwE3aWDM',
-      poly: 'TDhc9kfyBqjhLrwvAnZZCKCan2w8KGbJZh'
+      poly: 'TDhc9kfyBqjhLrwvAnZZCKCan2w8KGbJZh',
     },
     sunContract: {
       factory: 'TR5dL4GZ7L7whuwK9Z33AhzxapPoyPW1mL',
-      poly: 'TTbvkvzTHNwACb9hSrwcTHG6pE6GaKJ4AT'
+      poly: 'TTbvkvzTHNwACb9hSrwcTHG6pE6GaKJ4AT',
     },
     v2Contract: {
       poly: 'THKx73oAnA6kejnEBzgFkNH2mD93neqmu8',
       factory: 'THomLGMLhAjMecQf9FQjbZ8a1RtwsZLrGE',
-      router: 'TMn1qrmYUMSTXo9babrJLzepKZoPC7M6Sy'
+      router: 'TMn1qrmYUMSTXo9babrJLzepKZoPC7M6Sy',
     },
     migrateContract: {
       v1: 'TRteBL1qsDyE3jPtdLu81YRocKrwXERiN1',
-      v15: 'TDs2b8MsJGLM98TSAuPHT25rk7W9iZETfc'
+      v15: 'TDs2b8MsJGLM98TSAuPHT25rk7W9iZETfc',
     },
     wtrxAddress: 'TYsbWxNnyTgsZaTFaue9hqpxkU3Fkco94a',
     sun: {
@@ -282,7 +280,7 @@ if (env === 'qaTest') {
       newSunDecimal: 18,
       newSunToken: 'TDqjTkZ63yHB19w2n7vPm2qAkLHwn9fKKk',
       newSunPrice: '1000',
-      maxBtnDecimal: 6
+      maxBtnDecimal: 6,
     },
     tronscanUrl: 'https://nile.tronscan.io/#',
     swapService: 'http://123.56.166.152:10088/swap',
@@ -298,12 +296,12 @@ if (env === 'qaTest') {
     fileLink: 'https://www.sunswap.com/docs/',
     klineService: 'https://nileapi.tronscan.org/api/justswap/kline',
     deflationToken: {
-      'TMsZAkG3mCztEJruT9bnfbZJ8Nk5Cq7azU': {
+      TMsZAkG3mCztEJruT9bnfbZJ8Nk5Cq7azU: {
         slippage: '15%',
-        symbol: 'SEAD'
-      }
-    }
-  };
+        symbol: 'SEAD',
+      },
+    },
+  }
 }
 
-export default Object.assign(Config, devConfig);
+export default Object.assign(Config, devConfig)
