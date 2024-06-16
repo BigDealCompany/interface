@@ -42,7 +42,6 @@
     "startPro": "PORT=18098 react-app-rewired start",
     "startTestPro": "PORT=18099 react-app-rewired start",
     "testPro": "PORT=18099 cross-env REACT_APP_ENV=testPro react-app-rewired start",
-    "startTest": "PORT=18099 cross-env REACT_APP_ENV=qaTest react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "cross-env REACT_APP_ENV=test react-app-rewired build",
     "prdTest": "cross-env REACT_APP_ENV=prdTest react-app-rewired build",

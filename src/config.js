@@ -2,7 +2,7 @@ const env = process.env.REACT_APP_ENV
 
 const tokenInfo = require(`./token.js`).default
 let devTokenInfo = {}
-if (env === 'test' || env === 'qaTest') {
+if (env === 'test') {
   devTokenInfo = require(`./token.test.js`).default
 }
 const TOKENS = Object.assign(tokenInfo, devTokenInfo)
@@ -28,10 +28,6 @@ const Config = {
     poly: 'TQaSotYu7hLZZvea6wrCrtMmFQvDJwRR3y',
     factory: 'TPvaMEL5oY2gWsJv7MDjNQh2dohwvwwVwx',
     router: 'TNvdqHkoToRLfKqeK78nzSpcAF5dd93tPZ',
-  },
-  migrateContract: {
-    v1: 'TRBnS7G2avcryeXtUAQ66mikec4XgZHSCd',
-    v15: 'TKFoQ8MdMvtDLHmQqTdbAzKw4D3iSwE5Jp',
   },
   MAX_HOPS: 3,
   wtrxAddress: 'TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR',
@@ -232,62 +228,6 @@ if (env === 'testPro') {
     remainTrx: 100,
     remainMaxTrx: 1200,
     firstTRXLimit: 1000,
-    justLink: 'https://djed-test.tronscan.io/',
-    justList: 'http://123.56.166.152:18117/',
-    sunUrl: 'http://123.56.166.152:18109/',
-    rankUrl: 'http://123.56.166.152:10088/',
-    tvl: 'http://123.56.166.152:10088/ssp/getSunIOTvl',
-    fileLink: 'https://www.sunswap.com/docs/',
-    klineService: 'https://nileapi.tronscan.org/api/justswap/kline',
-    deflationToken: {
-      TMsZAkG3mCztEJruT9bnfbZJ8Nk5Cq7azU: {
-        slippage: '15%',
-        symbol: 'SEAD',
-      },
-    },
-  }
-}
-if (env === 'qaTest') {
-  devConfig = {
-    chain: {
-      privateKey: '01',
-      fullHost: 'https://api.nileex.io',
-    },
-    contract: {
-      factory: 'TXFouUxm4Qs3c1VxfQtCo4xMxbpwE3aWDM',
-      poly: 'TDhc9kfyBqjhLrwvAnZZCKCan2w8KGbJZh',
-    },
-    sunContract: {
-      factory: 'TR5dL4GZ7L7whuwK9Z33AhzxapPoyPW1mL',
-      poly: 'TTbvkvzTHNwACb9hSrwcTHG6pE6GaKJ4AT',
-    },
-    v2Contract: {
-      poly: 'THKx73oAnA6kejnEBzgFkNH2mD93neqmu8',
-      factory: 'THomLGMLhAjMecQf9FQjbZ8a1RtwsZLrGE',
-      router: 'TMn1qrmYUMSTXo9babrJLzepKZoPC7M6Sy',
-    },
-    migrateContract: {
-      v1: 'TRteBL1qsDyE3jPtdLu81YRocKrwXERiN1',
-      v15: 'TDs2b8MsJGLM98TSAuPHT25rk7W9iZETfc',
-    },
-    wtrxAddress: 'TYsbWxNnyTgsZaTFaue9hqpxkU3Fkco94a',
-    sun: {
-      exchange: 'TMW477jqeR1RWEVvmXJBhyRckmiTPxvKg9',
-      sunLearnMoreEn: 'https://sunio.zendesk.com/hc/en-us/articles/900006328246',
-      sunLearnMoreCn: 'https://sunio.zendesk.com/hc/zh-cn/articles/900006328246',
-      oldSunDecimal: 18,
-      oldSunToken: 'TWrZRHY9aKQZcyjpovdH6qeCEyYZrRQDZt',
-      newSunDecimal: 18,
-      newSunToken: 'TDqjTkZ63yHB19w2n7vPm2qAkLHwn9fKKk',
-      newSunPrice: '1000',
-      maxBtnDecimal: 6,
-    },
-    tronscanUrl: 'https://nile.tronscan.io/#',
-    swapService: 'http://123.56.166.152:10088/swap',
-    swapServiceV2: 'http://47.252.23.81:10085/swapv2',
-    remainTrx: 100,
-    remainMaxTrx: 1200,
-    firstTRXLimit: 10,
     justLink: 'https://djed-test.tronscan.io/',
     justList: 'http://123.56.166.152:18117/',
     sunUrl: 'http://123.56.166.152:18109/',
