@@ -1,31 +1,31 @@
-import React from 'react';
-import intl from 'react-intl-universal';
-import { inject, observer } from 'mobx-react';
-import { Modal, Tooltip } from 'antd';
-import BigNumber from 'bignumber.js';
-import ActionBtns from '../ActionBtns';
-import MiniPop from '../MiniPop';
-import RemoveExInfo from './RemoveLiq/RemoveExInfo';
-import Config from '../../config';
+import React from 'react'
+import intl from 'react-intl-universal'
+import { inject, observer } from 'mobx-react'
+import { Modal, Tooltip } from 'antd'
+import BigNumber from 'bignumber.js'
+import ActionBtns from '../ActionBtns'
+import MiniPop from '../MiniPop'
+import RemoveExInfo from './RemoveLiq/RemoveExInfo'
+import Config from '../../config'
 import {
   getExchangeInfoV2,
   removeLiquidityV2,
   removeLiquidityTRX,
   calcDeadline,
-  approveV2
-} from '../../utils/blockchain';
-import { formatNumber, getModalLeft } from '../../utils/helper';
-import '../../assets/css/pool.scss';
-import arrowLeftGray from '../../assets/images/Back.svg';
-import defaultLogoUrl from '../../assets/images/default.png';
-import transactionSuccessSvg from '../../assets/images/TransactionSuccess.svg';
+  approveV2,
+} from '../../utils/blockchain'
+import { formatNumber, getModalLeft } from '../../utils/helper'
+import '../../assets/css/pool.scss'
+import arrowLeftGray from '../../assets/images/Back.svg'
+import defaultLogoUrl from '../../assets/images/default.png'
+import transactionSuccessSvg from '../../assets/images/TransactionSuccess.svg'
 
 @inject('pool')
 @inject('network')
 @observer
 class Remove extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       removePopStatus: false,
       removeErrorInfo: '',
@@ -34,20 +34,20 @@ class Remove extends React.Component {
       actionState: 'info', //  info success
       actionStarted: false,
       miniPopVisible: false,
-      pairApprovedAmout: new BigNumber(0)
-    };
+      pairApprovedAmout: new BigNumber(0),
+    }
   }
 
   componentDidMount = async () => {
-    this.getUserPool();
-  };
+    this.getUserPool()
+  }
 
   getUserPool = async () => {
-    const { liqToken } = this.props.pool;
-    const { fromToken, toToken } = liqToken;
+    const { liqToken } = this.props.pool
+    const { fromToken, toToken } = liqToken
 
-    const userAddr = this.props.network.defaultAccount;
-    this.props.pool.setData({ percentNum: 0 });
+    const userAddr = this.props.network.defaultAccount
+    this.props.pool.setData({ percentNum: 0 })
 
     const {
       exchangeAddr,
@@ -57,18 +57,18 @@ class Remove extends React.Component {
       userUniAmount,
       userTokenAAmount,
       userTokenBAmount,
-      allowancePair
-    } = await getExchangeInfoV2(userAddr, fromToken.tokenAddress, toToken.tokenAddress);
+      allowancePair,
+    } = await getExchangeInfoV2(userAddr, fromToken.tokenAddress, toToken.tokenAddress)
 
-    const pairApprovedAmout = allowancePair.div(Config.defaultTokenPrecision);
-    this.setState({ pairApprovedAmout });
+    const pairApprovedAmout = allowancePair.div(Config.defaultTokenPrecision)
+    this.setState({ pairApprovedAmout })
 
     if (exchangeAddr) {
-      this.setState({ exchangeAddr });
-      const poolExTokenOne = exTokenABalance.div(new BigNumber(10).pow(fromToken.tokenDecimal));
-      const poolExTokenTwo = exTokenBBalance.div(new BigNumber(10).pow(toToken.tokenDecimal));
-      const price1 = poolExTokenOne.div(poolExTokenTwo);
-      const price2 = poolExTokenTwo.div(poolExTokenOne);
+      this.setState({ exchangeAddr })
+      const poolExTokenOne = exTokenABalance.div(new BigNumber(10).pow(fromToken.tokenDecimal))
+      const poolExTokenTwo = exTokenBBalance.div(new BigNumber(10).pow(toToken.tokenDecimal))
+      const price1 = poolExTokenOne.div(poolExTokenTwo)
+      const price2 = poolExTokenTwo.div(poolExTokenOne)
       if (poolExTokenOne.gt(0)) {
         this.props.pool.setData({
           exchangeInfo: {
@@ -79,106 +79,111 @@ class Remove extends React.Component {
             price1,
             price2,
             poolExTokenOne,
-            poolExTokenTwo
-          }
-        });
+            poolExTokenTwo,
+          },
+        })
       }
     }
-  };
+  }
 
-  setLiq = status => {
-    this.props.pool.setData({ actionLiqV2: status });
-  };
+  setLiq = (status) => {
+    this.props.pool.setData({ actionLiqV2: status })
+  }
 
   beforeRemoveLiq = async () => {
     this.setState(
       {
         actionStarted: true,
         removePopBtn: intl.get('action.startBtn'),
-        removePopBtnDisabled: true
+        removePopBtnDisabled: true,
       },
       async () => {
-        const { liqToken } = this.props.pool;
-        const { fromToken, toToken } = liqToken;
-        const { exchangeAddr, pairApprovedAmout } = this.state;
+        const { liqToken } = this.props.pool
+        const { fromToken, toToken } = liqToken
+        const { exchangeAddr, pairApprovedAmout } = this.state
         if (!pairApprovedAmout.gt(0)) {
           const intlObj = {
             title: 'pool.add_approve_token',
-            obj: { token: `${fromToken.tokenSymbol}-${toToken.tokenSymbol} LP` }
-          };
-          const txid = await approveV2(exchangeAddr, Config.v2Contract.router, intlObj);
+            obj: { token: `${fromToken.tokenSymbol}-${toToken.tokenSymbol} LP` },
+          }
+          const txid = await approveV2(exchangeAddr, Config.v2Contract.router, intlObj)
           if (txid) {
-            this.toRemoveLiq();
+            this.toRemoveLiq()
           } else {
             this.setState({
               removeErrorInfo: intl.get('action.removeActErr'),
               removePopBtn: intl.get('action.retryBtn'),
               removePopBtnDisabled: false,
-              actionStarted: true
-            });
+              actionStarted: true,
+            })
           }
         } else {
-          this.toRemoveLiq();
+          this.toRemoveLiq()
         }
-      }
-    );
-  };
+      },
+    )
+  }
 
   toRemoveLiq = async () => {
-    const { liqToken, exchangeInfo, percentNum } = this.props.pool;
-    const { fromToken, toToken } = liqToken;
-    const removeOneValue = exchangeInfo.myExTokenOne.times(percentNum).div(100);
-    const removeTwoValue = exchangeInfo.myExTokenTwo.times(percentNum).div(100);
+    const { liqToken, exchangeInfo, percentNum } = this.props.pool
+    const { fromToken, toToken } = liqToken
+    const removeOneValue = exchangeInfo.myExTokenOne.times(percentNum).div(100)
+    const removeTwoValue = exchangeInfo.myExTokenTwo.times(percentNum).div(100)
     const amount = exchangeInfo.pairTokens
       .times(percentNum)
       .div(100)
       .times(Config.defaultTokenPrecision)
-      .integerValue(BigNumber.ROUND_DOWN);
+      .integerValue(BigNumber.ROUND_DOWN)
 
     const intlObj = {
       title: 'pair_actions.remove',
       obj: {
         trxAmount: formatNumber(
           BigNumber(exchangeInfo.myExTokenOne).times(percentNum).div(100),
-          fromToken.tokenDecimal
+          fromToken.tokenDecimal,
         ),
         trx: fromToken.tokenSymbol,
         tokenSymbol: toToken.tokenSymbol,
-        tokenAmount: formatNumber(BigNumber(exchangeInfo.myExTokenTwo).times(percentNum).div(100), toToken.tokenDecimal)
-      }
-    };
+        tokenAmount: formatNumber(
+          BigNumber(exchangeInfo.myExTokenTwo).times(percentNum).div(100),
+          toToken.tokenDecimal,
+        ),
+      },
+    }
 
-    let { settingSlippageV2, defaultAccount } = this.props.network;
-    const amountAMin = `0x${removeOneValue.gte(0)
-      ? removeOneValue
-        .times(1 - settingSlippageV2 / 100)
-        .times(new BigNumber(10).pow(fromToken.tokenDecimal))
-        .integerValue(BigNumber.ROUND_DOWN)
-        .toString(16)
-      : 0
-      }`;
-    const amountBMin = `0x${removeTwoValue.gte(0)
-      ? removeTwoValue
-        .times(1 - settingSlippageV2 / 100)
-        .times(new BigNumber(10).pow(toToken.tokenDecimal))
-        .integerValue(BigNumber.ROUND_DOWN)
-        .toString(16)
-      : 0
-      }`;
+    let { settingSlippageV2, defaultAccount } = this.props.network
+    const amountAMin = `0x${
+      removeOneValue.gte(0)
+        ? removeOneValue
+            .times(1 - settingSlippageV2 / 100)
+            .times(new BigNumber(10).pow(fromToken.tokenDecimal))
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toString(16)
+        : 0
+    }`
+    const amountBMin = `0x${
+      removeTwoValue.gte(0)
+        ? removeTwoValue
+            .times(1 - settingSlippageV2 / 100)
+            .times(new BigNumber(10).pow(toToken.tokenDecimal))
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toString(16)
+        : 0
+    }`
 
-    let txid;
+    let txid
 
     if (fromToken.tokenAddress === Config.wtrxAddress || toToken.tokenAddress === Config.wtrxAddress) {
       const paramsTrx = {
         token: fromToken.tokenAddress === Config.wtrxAddress ? toToken.tokenAddress : fromToken.tokenAddress,
         liquidity: `0x${amount.toString(16)}`,
         amountTokenMin: fromToken.tokenAddress === Config.wtrxAddress ? amountBMin : amountAMin,
-        amountETHMin: fromToken.tokenAddress === Config.wtrxAddress ? amountAMin : amountBMin,
+        amountTRXMin: fromToken.tokenAddress === Config.wtrxAddress ? amountAMin : amountBMin,
         to: defaultAccount,
-        deadline: await calcDeadline(this.props.network.settingDeadlineV2)
-      };
+        deadline: await calcDeadline(this.props.network.settingDeadlineV2),
+      }
 
-      txid = await removeLiquidityTRX(paramsTrx, intlObj);
+      txid = await removeLiquidityTRX(paramsTrx, intlObj)
     } else {
       const params = {
         tokenA: fromToken.tokenAddress,
@@ -187,9 +192,9 @@ class Remove extends React.Component {
         amountAMin,
         amountBMin,
         to: defaultAccount,
-        deadline: await calcDeadline(this.props.network.settingDeadlineV2)
-      };
-      txid = await removeLiquidityV2(params, intlObj);
+        deadline: await calcDeadline(this.props.network.settingDeadlineV2),
+      }
+      txid = await removeLiquidityV2(params, intlObj)
     }
 
     if (txid) {
@@ -198,26 +203,26 @@ class Remove extends React.Component {
           removeErrorInfo: '',
           removePopBtn: intl.get('action.doingBtn'),
           removePopBtnDisabled: true,
-          actionStarted: true
+          actionStarted: true,
         },
         () => {
           setTimeout(() => {
             this.setState({
               actionState: 'success',
-              actionStarted: false
-            });
-          }, 5000);
-        }
-      );
+              actionStarted: false,
+            })
+          }, 5000)
+        },
+      )
     } else {
       this.setState({
         removeErrorInfo: intl.get('action.removeActErr'),
         removePopBtn: intl.get('action.retryBtn'),
         removePopBtnDisabled: false,
-        actionStarted: true
-      });
+        actionStarted: true,
+      })
     }
-  };
+  }
 
   initRemoveModal = () => {
     return {
@@ -226,74 +231,74 @@ class Remove extends React.Component {
       removePopBtnDisabled: false,
       actionState: 'info', //  info success
       actionStarted: false,
-      miniPopVisible: false
-    };
-  };
+      miniPopVisible: false,
+    }
+  }
 
   showRemoveModal = () => {
-    const { exchangeInfo, percentNum } = this.props.pool;
+    const { exchangeInfo, percentNum } = this.props.pool
     if (percentNum > 0 && exchangeInfo.pairTokens.gt(0)) {
-      this.setState({ ...this.initRemoveModal(), removePopStatus: true });
+      this.setState({ ...this.initRemoveModal(), removePopStatus: true })
     }
-  };
+  }
 
   beforeHideRemoveModal = () => {
-    const actionStarted = this.state.actionStarted;
+    const actionStarted = this.state.actionStarted
 
     if (actionStarted) {
-      this.setState({ miniPopVisible: true });
+      this.setState({ miniPopVisible: true })
     } else {
-      this.hideRemoveModal();
+      this.hideRemoveModal()
     }
-  };
+  }
 
   hideRemoveModal = () => {
     this.setState({ removePopStatus: false }, () => {
       setTimeout(() => {
         this.setState({
-          ...this.initRemoveModal()
-        });
-      }, 1000);
-    });
-  };
+          ...this.initRemoveModal(),
+        })
+      }, 1000)
+    })
+  }
 
   miniPopOk = () => {
     this.setState(
       {
-        miniPopVisible: false
+        miniPopVisible: false,
       },
       () => {
-        this.hideRemoveModal();
-      }
-    );
-  };
+        this.hideRemoveModal()
+      },
+    )
+  }
 
   miniPopCancel = () => {
-    this.setState({ miniPopVisible: false });
-  };
+    this.setState({ miniPopVisible: false })
+  }
 
   gotoPool = () => {
-    this.props.pool.setData({ actionLiqV2: 0 });
-  };
+    this.props.pool.setData({ actionLiqV2: 0 })
+  }
 
   render() {
-    let { removePopStatus } = this.state;
-    let { liqToken, exchangeInfo, percentNum } = this.props.pool;
-    const { fromToken, toToken } = liqToken;
+    let { removePopStatus } = this.state
+    let { liqToken, exchangeInfo, percentNum } = this.props.pool
+    const { fromToken, toToken } = liqToken
     const priceCalc = (v, decimal) => {
       if (v.isNaN() || v.eq(Infinity)) {
-        return '--';
+        return '--'
       } else {
-        return v._toFixed(Number(decimal), 1);
+        return v._toFixed(Number(decimal), 1)
       }
-    };
-    let priceDiyOne = priceCalc(exchangeInfo.myExTokenTwo.div(exchangeInfo.myExTokenOne), toToken.tokenDecimal);
-    let priceDiyTwo = priceCalc(exchangeInfo.myExTokenOne.div(exchangeInfo.myExTokenTwo), fromToken.tokenDecimal);
+    }
+    let priceDiyOne = priceCalc(exchangeInfo.myExTokenTwo.div(exchangeInfo.myExTokenOne), toToken.tokenDecimal)
+    let priceDiyTwo = priceCalc(exchangeInfo.myExTokenOne.div(exchangeInfo.myExTokenTwo), fromToken.tokenDecimal)
     return (
       <section className="action-content">
         <header className="flex between">
           <div>
-            <span className="return ib" onClick={e => this.setLiq(0)}>
+            <span className="return ib" onClick={(e) => this.setLiq(0)}>
               <img src={arrowLeftGray} alt="back" />
             </span>
             <div className="add-title">{intl.get('pool.remove_liq_title')}</div>
@@ -429,8 +434,8 @@ class Remove extends React.Component {
 
         <MiniPop visible={this.state.miniPopVisible} confirm={this.miniPopOk} cancel={this.miniPopCancel} />
       </section>
-    );
+    )
   }
 }
 
-export default Remove;
+export default Remove

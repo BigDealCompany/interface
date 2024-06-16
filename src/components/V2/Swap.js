@@ -1,16 +1,16 @@
-import React from 'react';
-import isMobile from 'ismobilejs';
-import { inject, observer } from 'mobx-react';
-import intl from 'react-intl-universal';
-import { Layout, Modal, Tooltip } from 'antd';
-import SelectToken from './SelectToken';
-import Tip from '../Tip';
-import Tokens from './TokensModal';
-import ActionBtns from '../ActionBtns';
-import ActionLine from '../ActionLine';
-import MiniPop from '../MiniPop';
+import React from 'react'
+import isMobile from 'ismobilejs'
+import { inject, observer } from 'mobx-react'
+import intl from 'react-intl-universal'
+import { Layout, Modal, Tooltip } from 'antd'
+import SelectToken from './SelectToken'
+import Tip from '../Tip'
+import Tokens from './TokensModal'
+import ActionBtns from '../ActionBtns'
+import ActionLine from '../ActionLine'
+import MiniPop from '../MiniPop'
 
-import Config from '../../config';
+import Config from '../../config'
 import {
   isAddress,
   numberParser,
@@ -23,31 +23,31 @@ import {
   toBigNumberNew,
   _toFormat,
   formatNumberNew,
-  getParameterByName
-} from '../../utils/helper';
+  getParameterByName,
+} from '../../utils/helper'
 
-import { useBestV2Trade } from '../../utils/trade';
-import { calcDeadline, approve, swapFuncV2, swapExactTokensForTokens } from '../../utils/blockchain';
+import { useBestV2Trade } from '../../utils/trade'
+import { calcDeadline, approve, swapFuncV2, swapExactTokensForTokens } from '../../utils/blockchain'
 
-import '../../assets/css/swap.scss';
-import perIcon from '../../assets/images/per.svg';
-import arrIcon from '../../assets/images/arrDown.svg';
-import downIcon from '../../assets/images/down.svg';
-import arrow from '../../assets/images/Arrow.png';
-import defaultLogoUrl from '../../assets/images/default.png';
-import transactionSuccessSvg from '../../assets/images/TransactionSuccess.svg';
-import transRouteImg from '../../assets/images/trans-route.svg';
-import TransRouteWhiteImg from '../../assets/images/trans-route-white.svg';
+import '../../assets/css/swap.scss'
+import perIcon from '../../assets/images/per.svg'
+import arrIcon from '../../assets/images/arrDown.svg'
+import downIcon from '../../assets/images/down.svg'
+import arrow from '../../assets/images/Arrow.png'
+import defaultLogoUrl from '../../assets/images/default.png'
+import transactionSuccessSvg from '../../assets/images/TransactionSuccess.svg'
+import transRouteImg from '../../assets/images/trans-route.svg'
+import TransRouteWhiteImg from '../../assets/images/trans-route-white.svg'
 
 @inject('network')
 @inject('pool')
 @observer
 class Swap extends React.Component {
   constructor(props) {
-    super(props);
-    this.timer = 0;
-    this.timer1 = 0;
-    this.swapFuncType = '';
+    super(props)
+    this.timer = 0
+    this.timer1 = 0
+    this.swapFuncType = ''
     this.state = {
       swapTRXState: false,
       bestTrade: null,
@@ -97,90 +97,90 @@ class Swap extends React.Component {
         { symbol: 'wbtt' },
         { symbol: 'sunold' },
         { symbol: 'nft' },
-        { symbol: 'usdj' }
-      ] // for test
-    };
+        { symbol: 'usdj' },
+      ], // for test
+    }
   }
 
   componentDidMount() {
-    this.props.pool.getBalanceAndApprove();
+    this.props.pool.getBalanceAndApprove()
     // this.getTokenBalance();
     this.timer = setInterval(() => {
-      this.props.pool.getBalanceAndApprove();
-    }, 6000);
+      this.props.pool.getBalanceAndApprove()
+    }, 6000)
     this.timer1 = setInterval(() => {
-      this.props.pool.getReservesAll();
-    }, 3000);
-    this.checkInput();
+      this.props.pool.getReservesAll()
+    }, 3000)
+    this.checkInput()
   }
 
   componentWillUnmount = () => {
-    clearInterval(this.timer);
-    clearInterval(this.timer1);
-  };
+    clearInterval(this.timer)
+    clearInterval(this.timer1)
+  }
 
   isSwapTRX = (fromToken = {}, toToken = {}) => {
-    const tokenA = fromToken.tokenAddress;
-    const tokenB = toToken.tokenAddress;
-    const { trxFakeAddress, wtrxAddress } = Config;
+    const tokenA = fromToken.tokenAddress
+    const tokenB = toToken.tokenAddress
+    const { trxFakeAddress, wtrxAddress } = Config
     if (
       (tokenA === trxFakeAddress && tokenB === wtrxAddress) ||
       (tokenA === wtrxAddress && tokenB === trxFakeAddress)
     ) {
-      return true;
+      return true
     }
-    return false;
-  };
+    return false
+  }
 
   checkInput = () => {
-    let actionError = '';
-    const fromToken = this.props.pool.swapToken.fromToken;
-    const toToken = this.props.pool.swapToken.toToken;
-    const fromTokenAddress = fromToken.tokenAddress;
-    const toTokenAddress = toToken.tokenAddress;
-    const dependentValue = this.state.dependentValue;
-    const fromBalance = BigNumber(fromToken.balance);
-    const toBalance = toToken.balance;
-    const errFunc = actionError => {
-      this.setState({ actionError });
-    };
-    const { fromValue, toValue, receivedFlag, bestTrade, recipientAddr, swapTRXState } = this.state;
+    let actionError = ''
+    const fromToken = this.props.pool.swapToken.fromToken
+    const toToken = this.props.pool.swapToken.toToken
+    const fromTokenAddress = fromToken.tokenAddress
+    const toTokenAddress = toToken.tokenAddress
+    const dependentValue = this.state.dependentValue
+    const fromBalance = BigNumber(fromToken.balance)
+    const toBalance = toToken.balance
+    const errFunc = (actionError) => {
+      this.setState({ actionError })
+    }
+    const { fromValue, toValue, receivedFlag, bestTrade, recipientAddr, swapTRXState } = this.state
 
     if (this.state.miniError) {
-      return errFunc(intl.get('swap.action_zero'));
+      return errFunc(intl.get('swap.action_zero'))
     }
 
     if (!swapTRXState) {
       if (recipientAddr) {
         if (isAddress(recipientAddr)) {
-          this.setState({ recipientValid: true });
+          this.setState({ recipientValid: true })
         } else {
-          this.setState({ recipientValid: false });
-          return errFunc(intl.get('swap.action_invalid_recipient'));
+          this.setState({ recipientValid: false })
+          return errFunc(intl.get('swap.action_invalid_recipient'))
         }
       } else {
-        this.setState({ recipientValid: false });
+        this.setState({ recipientValid: false })
         if (this.state.addRecipient) {
-          return errFunc(intl.get('swap.action_enter_recipient'));
+          return errFunc(intl.get('swap.action_enter_recipient'))
         }
       }
     }
 
     if ((!fromTokenAddress && !getParameterByName('t0')) || (!toTokenAddress && !getParameterByName('t1'))) {
-      return errFunc(intl.get('swap.action_select_token'));
+      return errFunc(intl.get('swap.action_select_token'))
     }
 
     if (fromValue) {
       if (toBigNumberNew(fromValue).lte(0)) {
-        return errFunc(intl.get('swap.action_enter_amount'));
+        return errFunc(intl.get('swap.action_enter_amount'))
       }
       if (swapTRXState) {
         if (fromBalance && fromBalance.lt(toBigNumberNew(fromValue))) {
           return errFunc(
             intl.get('swap.action_insufficient', {
-              token: fromToken.tokenSymbol
-            })
-          );
+              token: fromToken.tokenSymbol,
+            }),
+          )
         }
       }
 
@@ -189,193 +189,190 @@ class Swap extends React.Component {
           if (fromBalance && fromBalance.lt(toBigNumberNew(fromValue))) {
             return errFunc(
               intl.get('swap.action_insufficient', {
-                token: fromToken.tokenSymbol
-              })
-            );
+                token: fromToken.tokenSymbol,
+              }),
+            )
           }
 
           if (toBigNumberNew(fromValue).gt(fromToken.approvedAmount)) {
-            return this.setState({ actionError, needApprove: true });
+            return this.setState({ actionError, needApprove: true })
           }
         } else {
-          return errFunc(intl.get('swap.action_insufficient_liquidity'));
+          return errFunc(intl.get('swap.action_insufficient_liquidity'))
         }
       } else {
         if (!swapTRXState && fromBalance.lt(toBigNumberNew(dependentValue))) {
           return errFunc(
             intl.get('swap.action_insufficient', {
-              token: fromToken.tokenSymbol
-            })
-          );
+              token: fromToken.tokenSymbol,
+            }),
+          )
         }
 
         if (!swapTRXState && BigNumber(dependentValue).gt(fromToken.approvedAmount)) {
-          return this.setState({ actionError, needApprove: true });
+          return this.setState({ actionError, needApprove: true })
         }
       }
     } else {
       if (!receivedFlag && toValue) {
         if (BigNumber(toValue).lte(0)) {
-          return errFunc(intl.get('swap.action_enter_amount'));
+          return errFunc(intl.get('swap.action_enter_amount'))
         }
 
-        return errFunc(intl.get('swap.action_insufficient_liquidity'));
+        return errFunc(intl.get('swap.action_insufficient_liquidity'))
       }
 
-      return errFunc(intl.get('swap.action_enter_amount'));
+      return errFunc(intl.get('swap.action_enter_amount'))
     }
 
-    this.setState({ actionError, needApprove: false });
-  };
+    this.setState({ actionError, needApprove: false })
+  }
 
-  onFromValueChange = e => {
-    let fromValue = e.target.value;
-    let toValue = this.state.toValue;
+  onFromValueChange = (e) => {
+    let fromValue = e.target.value
+    let toValue = this.state.toValue
     // fromValue = toBigNumberNew(fromValue);
     if (fromValue) {
-      const { valid, str } = numberParser(
-        fromValue.replace(/,/g, ''),
-        this.props.pool.swapToken.fromToken.tokenDecimal
-      );
+      const { valid, str } = numberParser(fromValue.replace(/,/g, ''), this.props.pool.swapToken.fromToken.tokenDecimal)
       if (valid) {
-        fromValue = str;
+        fromValue = str
       } else {
-        return;
+        return
       }
 
       if (!this.props.pool.swapToken.fromToken.tokenAddress || !this.props.pool.swapToken.toToken.tokenAddress) {
-        toValue = '';
+        toValue = ''
       }
     } else {
-      toValue = '';
+      toValue = ''
     }
 
     this.setState({ fromValue: _toFormat(fromValue), toValue: _toFormat(toValue), receivedFlag: true }, async () => {
-      await this.calcPrice();
-      this.checkInput();
-    });
-  };
+      await this.calcPrice()
+      this.checkInput()
+    })
+  }
 
-  onToValueChange = e => {
-    let fromValue = this.state.fromValue;
-    let toValue = e.target.value;
+  onToValueChange = (e) => {
+    let fromValue = this.state.fromValue
+    let toValue = e.target.value
     if (toValue) {
-      const { valid, str } = numberParser(toValue.replace(/,/g, ''), this.props.pool.swapToken.toToken.tokenDecimal);
+      const { valid, str } = numberParser(toValue.replace(/,/g, ''), this.props.pool.swapToken.toToken.tokenDecimal)
       if (valid) {
-        toValue = str;
+        toValue = str
       } else {
-        return;
+        return
       }
 
       if (!this.props.pool.swapToken.fromToken.tokenAddress || !this.props.pool.swapToken.toToken.tokenAddress) {
-        fromValue = '';
+        fromValue = ''
       }
     } else {
-      fromValue = '';
+      fromValue = ''
     }
 
     this.setState({ fromValue: _toFormat(fromValue), toValue: _toFormat(toValue), receivedFlag: false }, async () => {
-      await this.calcPrice();
-    });
-  };
+      await this.calcPrice()
+    })
+  }
 
   onFromValueBlur = () => {
-    let fromValue = this.state.fromValue;
+    let fromValue = this.state.fromValue
     // fromValue = toBigNumberNew(fromValue);
     if (fromValue) {
-      this.setState({ fromValue: _toFormat(fromValue) });
+      this.setState({ fromValue: _toFormat(fromValue) })
     }
-  };
+  }
 
   onToValueBlur = () => {
-    let toValue = this.state.toValue;
+    let toValue = this.state.toValue
     // toValue = toBigNumberNew(toValue);
     if (toValue) {
-      this.setState({ toValue: _toFormat(toValue) });
+      this.setState({ toValue: _toFormat(toValue) })
     }
-  };
+  }
 
   calcPriceTRXSwap = (fromToken, toToken) => {
-    let { receivedFlag, fromValue, toValue } = this.state;
+    let { receivedFlag, fromValue, toValue } = this.state
     // fromValue = toBigNumberNew(fromValue);
     // toValue = toBigNumberNew(toValue);
-    const precision0 = BigNumber(10).pow(fromToken.tokenDecimal);
-    const precision1 = BigNumber(10).pow(toToken.tokenDecimal);
+    const precision0 = BigNumber(10).pow(fromToken.tokenDecimal)
+    const precision1 = BigNumber(10).pow(toToken.tokenDecimal)
     if (receivedFlag) {
       toValue = toBigNumberNew(fromValue).gt(0)
         ? toBigNumberNew(fromValue).times(precision0).div(precision1)._toFixed(Number(toToken.tokenDecimal), 1)
-        : '';
+        : ''
     } else {
       fromValue = toBigNumberNew(toValue).gt(0)
         ? toBigNumberNew(toValue).times(precision1).div(precision0)._toFixed(Number(fromToken.tokenDecimal), 1)
-        : '';
+        : ''
     }
     this.setState({ fromValue: _toFormat(fromValue), toValue: _toFormat(toValue) }, () => {
-      this.checkInput();
-      this.calcDependentValue(fromValue, toValue);
-    });
-  };
+      this.checkInput()
+      this.calcDependentValue(fromValue, toValue)
+    })
+  }
 
   calcPrice = async () => {
     try {
-      const { fromToken, toToken, pairAddress, validPairs = [] } = this.props.pool.swapToken;
-      let { receivedFlag, fromValue, toValue } = this.state;
-      const swapTRXState = this.isSwapTRX(fromToken, toToken);
+      const { fromToken, toToken, pairAddress, validPairs = [] } = this.props.pool.swapToken
+      let { receivedFlag, fromValue, toValue } = this.state
+      const swapTRXState = this.isSwapTRX(fromToken, toToken)
       if (swapTRXState) {
         return this.setState({ swapTRXState, priceStr: 1, priceInverseStr: 1 }, () => {
-          this.calcPriceTRXSwap(fromToken, toToken);
-        });
+          this.calcPriceTRXSwap(fromToken, toToken)
+        })
       }
-      this.setState({ swapTRXState: false });
-      this.state.swapTRXState = false;
-      let priceStr = '-';
-      let priceInverseStr = '-';
+      this.setState({ swapTRXState: false })
+      this.state.swapTRXState = false
+      let priceStr = '-'
+      let priceInverseStr = '-'
 
-      const precision0 = BigNumber(10).pow(fromToken.tokenDecimal);
-      const precision1 = BigNumber(10).pow(toToken.tokenDecimal);
+      const precision0 = BigNumber(10).pow(fromToken.tokenDecimal)
+      const precision1 = BigNumber(10).pow(toToken.tokenDecimal)
 
-      fromToken.value = toBigNumberNew(fromValue).times(precision0);
-      toToken.value = toBigNumberNew(toValue).times(precision1);
+      fromToken.value = toBigNumberNew(fromValue).times(precision0)
+      toToken.value = toBigNumberNew(toValue).times(precision1)
       const resV2 = await useBestV2Trade(
         receivedFlag ? toBigNumberNew(fromValue).times(precision0) : toBigNumberNew(toValue).times(precision1),
         { ...fromToken },
         { ...toToken },
         [...validPairs],
-        receivedFlag ? 1 : 2
-      );
-      const { bestTrade, fromTokenAddress, toTokenAddress, amountSpecified } = resV2;
+        receivedFlag ? 1 : 2,
+      )
+      const { bestTrade, fromTokenAddress, toTokenAddress, amountSpecified } = resV2
 
       if (fromTokenAddress === fromToken.tokenAddress && toTokenAddress === toToken.tokenAddress) {
         if (
           (receivedFlag && toBigNumberNew(this.state.fromValue).times(precision0).eq(amountSpecified)) ||
           (!receivedFlag && toBigNumberNew(this.state.toValue).times(precision1).eq(amountSpecified))
         ) {
-          this.state.bestTrade = bestTrade;
-          this.setState({ bestTrade });
+          this.state.bestTrade = bestTrade
+          this.setState({ bestTrade })
           if (!bestTrade) {
-            this.initStateData();
-            return;
+            this.initStateData()
+            return
           }
-          const { tradeType, inputAmount, outputAmount, route, executionPrice, priceImpact } = bestTrade;
-          const outputAmountValue = outputAmount.outputAmount;
-          const inputAmountValue = inputAmount.inputAmount;
+          const { tradeType, inputAmount, outputAmount, route, executionPrice, priceImpact } = bestTrade
+          const outputAmountValue = outputAmount.outputAmount
+          const inputAmountValue = inputAmount.inputAmount
           if (receivedFlag) {
-            const tempToValue = outputAmountValue.div(precision1)._toFixed(Number(toToken.tokenDecimal), 1);
-            toValue = BigNumber(tempToValue).gt(0) ? tempToValue : '';
+            const tempToValue = outputAmountValue.div(precision1)._toFixed(Number(toToken.tokenDecimal), 1)
+            toValue = BigNumber(tempToValue).gt(0) ? tempToValue : ''
           } else {
-            const tempFromValue = inputAmountValue.div(precision0)._toFixed(Number(fromToken.tokenDecimal), 1);
-            fromValue = BigNumber(tempFromValue).gt(0) ? tempFromValue : '';
+            const tempFromValue = inputAmountValue.div(precision0)._toFixed(Number(fromToken.tokenDecimal), 1)
+            fromValue = BigNumber(tempFromValue).gt(0) ? tempFromValue : ''
           }
-          priceStr = inputAmountValue.div(outputAmountValue).div(precision0).times(precision1);
-          priceInverseStr = executionPrice.div(precision1).times(precision0);
+          priceStr = inputAmountValue.div(outputAmountValue).div(precision0).times(precision1)
+          priceInverseStr = executionPrice.div(precision1).times(precision0)
 
-          this.calcDependentValue(fromValue, toValue);
-          let liquidityProviderFee = '-';
-          let initValue = toBigNumberNew(fromValue);
+          this.calcDependentValue(fromValue, toValue)
+          let liquidityProviderFee = '-'
+          let initValue = toBigNumberNew(fromValue)
           if (route && route.path && route.path.length) {
-            const len = route.path.length;
-            initValue = initValue.times(0.003).times(len - 1);
-            liquidityProviderFee = initValue._toFixed(Number(fromToken.tokenDecimal), 1);
+            const len = route.path.length
+            initValue = initValue.times(0.003).times(len - 1)
+            liquidityProviderFee = initValue._toFixed(Number(fromToken.tokenDecimal), 1)
           }
 
           this.setState(
@@ -384,216 +381,216 @@ class Swap extends React.Component {
               priceInverseStr,
               fromValue: _toFormat(fromValue),
               toValue: _toFormat(toValue),
-              liquidityProviderFee
+              liquidityProviderFee,
             },
             () => {
-              this.checkInput();
-            }
-          );
-          this.calcPriceImpact(priceImpact);
+              this.checkInput()
+            },
+          )
+          this.calcPriceImpact(priceImpact)
         } else {
-          this.checkInput();
+          this.checkInput()
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
     }
-  };
+  }
 
   calcDependentValue = (fromValue, toValue) => {
-    const swapTRXState = this.state.swapTRXState;
+    const swapTRXState = this.state.swapTRXState
 
-    const slippage = new BigNumber(this.props.network.settingSlippageV2).div(100);
-    let dependentValue = new BigNumber(0);
-    let decimal = Config.trxDecimal;
+    const slippage = new BigNumber(this.props.network.settingSlippageV2).div(100)
+    let dependentValue = new BigNumber(0)
+    let decimal = Config.trxDecimal
 
     if (this.state.receivedFlag) {
       if (swapTRXState) {
-        dependentValue = toBigNumberNew(toValue);
+        dependentValue = toBigNumberNew(toValue)
       } else {
-        dependentValue = toBigNumberNew(toValue).times(BigNumber(1).minus(slippage));
+        dependentValue = toBigNumberNew(toValue).times(BigNumber(1).minus(slippage))
       }
-      decimal = this.props.pool.swapToken.toToken.tokenDecimal;
+      decimal = this.props.pool.swapToken.toToken.tokenDecimal
     } else {
       if (swapTRXState) {
-        dependentValue = toBigNumberNew(fromValue);
+        dependentValue = toBigNumberNew(fromValue)
       } else {
-        dependentValue = toBigNumberNew(fromValue).times(BigNumber(1).plus(slippage));
+        dependentValue = toBigNumberNew(fromValue).times(BigNumber(1).plus(slippage))
       }
-      decimal = this.props.pool.swapToken.fromToken.tokenDecimal;
+      decimal = this.props.pool.swapToken.fromToken.tokenDecimal
     }
 
     this.setState({
       dependentValue: dependentValue,
-      dependentValueSunBig: BigNumber(dependentValue).times(new BigNumber(10).pow(decimal))
-    });
-  };
+      dependentValueSunBig: BigNumber(dependentValue).times(new BigNumber(10).pow(decimal)),
+    })
+  }
 
   calcPriceImpact = (priceImpact = '--') => {
-    let priceImpactColor = '';
-    let showText = '--';
+    let priceImpactColor = ''
+    let showText = '--'
     if (BigNumber(priceImpact).lte(0) && BigNumber(priceImpact).gt(-0.01)) {
-      showText = '0.00%';
+      showText = '0.00%'
     } else {
-      showText = `${BigNumber(priceImpact)._toFixed(2)}%`;
+      showText = `${BigNumber(priceImpact)._toFixed(2)}%`
     }
     if (BigNumber(priceImpact).lte(-15)) {
-      priceImpactColor = 'red';
+      priceImpactColor = 'red'
     } else if (BigNumber(priceImpact).gt(-15) && BigNumber(priceImpact).lte(-5)) {
-      priceImpactColor = 'orange';
+      priceImpactColor = 'orange'
     } else {
-      priceImpactColor = 'blue';
+      priceImpactColor = 'blue'
     }
 
-    this.setState({ priceImpact: showText, priceImpactColor });
-  };
+    this.setState({ priceImpact: showText, priceImpactColor })
+  }
 
   setMaxFrom = () => {
-    const { swapToken } = this.props.pool;
-    const { fromToken } = swapToken;
-    const fromBalance = BigNumber(fromToken.balance);
-    if (!BigNumber(fromBalance).gte(0)) return;
+    const { swapToken } = this.props.pool
+    const { fromToken } = swapToken
+    const fromBalance = BigNumber(fromToken.balance)
+    if (!BigNumber(fromBalance).gte(0)) return
 
-    let balance = fromBalance;
+    let balance = fromBalance
 
-    const fromValue = balance.gt(0) ? balance._toFixed(Number(fromToken.tokenDecimal), 1) : '0';
+    const fromValue = balance.gt(0) ? balance._toFixed(Number(fromToken.tokenDecimal), 1) : '0'
 
     this.setState(
       {
         fromValue: _toFormat(fromValue),
-        receivedFlag: true
+        receivedFlag: true,
       },
       async () => {
-        await this.calcPrice();
-      }
-    );
-  };
+        await this.calcPrice()
+      },
+    )
+  }
 
-  addSolor = item => {
+  addSolor = (item) => {
     // console.log(item);
     try {
-      item.tokenDecimal = Number(item.tokenDecimal);
-      const { solor = [] } = this.props.pool;
-      const findIndex = _.findIndex(solor, token => {
-        return token.tokenAddress === item.tokenAddress;
-      });
+      item.tokenDecimal = Number(item.tokenDecimal)
+      const { solor = [] } = this.props.pool
+      const findIndex = _.findIndex(solor, (token) => {
+        return token.tokenAddress === item.tokenAddress
+      })
       if (findIndex >= 0) {
-        solor.splice(findIndex, 1, { ...item, cst: 2 });
+        solor.splice(findIndex, 1, { ...item, cst: 2 })
       } else {
-        solor.unshift({ ...item, cst: 2 });
+        solor.unshift({ ...item, cst: 2 })
       }
-      this.props.pool.setData({ solor });
+      this.props.pool.setData({ solor })
 
-      window.localStorage.setItem('solor', JSON.stringify(solor));
+      window.localStorage.setItem('solor', JSON.stringify(solor))
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  onFromTokenChange = async item => {
+  onFromTokenChange = async (item) => {
     try {
-      const { swapToken } = this.props.pool;
-      item.tokenDecimal = Number(item.tokenDecimal);
+      const { swapToken } = this.props.pool
+      item.tokenDecimal = Number(item.tokenDecimal)
       if (item.tokenAddress === swapToken.fromToken.tokenAddress) {
-        return;
+        return
       }
-      this.props.pool.showModal(1, false);
+      this.props.pool.showModal(1, false)
 
       if (item.cst) {
-        this.addSolor(item);
+        this.addSolor(item)
       }
 
       if (item.tokenAddress === swapToken.toToken.tokenAddress) {
-        return this.switchToken();
+        return this.switchToken()
       }
 
-      let fromValue = this.state.fromValue;
+      let fromValue = this.state.fromValue
       if (fromValue && item.tokenDecimal != swapToken.fromToken.tokenDecimal) {
-        fromValue = toBigNumberNew(fromValue)._toFixed(Number(item.tokenDecimal), 1);
+        fromValue = toBigNumberNew(fromValue)._toFixed(Number(item.tokenDecimal), 1)
       }
 
-      swapToken.fromToken = { ...item };
-      this.props.pool.setData({ swapToken });
+      swapToken.fromToken = { ...item }
+      this.props.pool.setData({ swapToken })
 
       this.setState(
         {
           fromValue: _toFormat(fromValue),
-          needApprove: false
+          needApprove: false,
         },
         async () => {
-          await this.props.pool.useAllCurrencyCombinations();
-          await this.props.pool.getBalanceAndApprove();
+          await this.props.pool.useAllCurrencyCombinations()
+          await this.props.pool.getBalanceAndApprove()
 
-          await this.calcPrice();
-        }
-      );
+          await this.calcPrice()
+        },
+      )
     } catch (err) {
-      this.props.pool.showModal(1, false);
+      this.props.pool.showModal(1, false)
 
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
-  onToTokenChange = async item => {
-    const { swapToken } = this.props.pool;
+  onToTokenChange = async (item) => {
+    const { swapToken } = this.props.pool
     if (item.tokenAddress === swapToken.toToken.tokenAddress) {
-      return;
+      return
     }
-    this.props.pool.showModal(2, false);
+    this.props.pool.showModal(2, false)
 
     if (item.cst) {
-      this.addSolor(item);
+      this.addSolor(item)
     }
 
     try {
       if (item.tokenAddress === swapToken.fromToken.tokenAddress) {
-        return this.switchToken();
+        return this.switchToken()
       }
-      item.tokenDecimal = Number(item.tokenDecimal);
+      item.tokenDecimal = Number(item.tokenDecimal)
 
-      let toValue = this.state.toValue;
+      let toValue = this.state.toValue
       if (toValue && item.tokenDecimal != swapToken.toToken.tokenDecimal) {
-        toValue = new BigNumber(toValue)._toFixed(Number(item.tokenDecimal), 1);
+        toValue = new BigNumber(toValue)._toFixed(Number(item.tokenDecimal), 1)
       }
-      swapToken.toToken = { ...item };
-      this.props.pool.setData({ swapToken });
+      swapToken.toToken = { ...item }
+      this.props.pool.setData({ swapToken })
 
       this.setState({ toValue }, async () => {
-        await this.props.pool.useAllCurrencyCombinations();
-        await this.props.pool.getBalanceAndApprove();
+        await this.props.pool.useAllCurrencyCombinations()
+        await this.props.pool.getBalanceAndApprove()
 
-        await this.calcPrice();
-      });
+        await this.calcPrice()
+      })
     } catch (error) {
-      this.props.pool.showModal(2, false);
+      this.props.pool.showModal(2, false)
 
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
   showAddRecipient = () => {
     this.setState({ addRecipient: true }, () => {
-      this.checkInput();
-    });
-  };
+      this.checkInput()
+    })
+  }
 
   switchPriceInverseFlag = () => {
-    this.setState({ priceInverseFlag: !this.state.priceInverseFlag });
-  };
+    this.setState({ priceInverseFlag: !this.state.priceInverseFlag })
+  }
 
   initStateData = () => {
-    let { receivedFlag, fromValue, toValue } = this.state;
+    let { receivedFlag, fromValue, toValue } = this.state
     if (receivedFlag) {
-      toValue = '';
+      toValue = ''
     } else {
-      fromValue = '';
+      fromValue = ''
     }
     const priceStr = '-',
       priceInverseStr = '-',
       dependentValue = '',
       priceImpact = '',
       priceImpactColor = '',
-      liquidityProviderFee = '';
+      liquidityProviderFee = ''
     this.setState({
       fromValue: _toFormat(fromValue),
       toValue,
@@ -603,25 +600,25 @@ class Swap extends React.Component {
       priceImpact,
       priceImpactColor,
       liquidityProviderFee,
-      actionError: intl.get('swap.action_insufficient_liquidity')
-    });
-  };
+      actionError: intl.get('swap.action_insufficient_liquidity'),
+    })
+  }
 
   switchToken = () => {
-    const originFromToken = { ...this.props.pool.swapToken.fromToken };
-    const originToToken = { ...this.props.pool.swapToken.toToken };
-    this.props.pool.swapToken.fromToken = originToToken;
-    this.props.pool.swapToken.toToken = originFromToken;
+    const originFromToken = { ...this.props.pool.swapToken.fromToken }
+    const originToToken = { ...this.props.pool.swapToken.toToken }
+    this.props.pool.swapToken.fromToken = originToToken
+    this.props.pool.swapToken.toToken = originFromToken
 
-    const { fromToken, toToken } = this.props.pool.swapToken;
+    const { fromToken, toToken } = this.props.pool.swapToken
 
-    let { receivedFlag, fromValue, toValue, priceInverseFlag } = this.state;
+    let { receivedFlag, fromValue, toValue, priceInverseFlag } = this.state
     if (receivedFlag) {
-      toValue = this.state.fromValue;
-      fromValue = this.state.toValue;
+      toValue = this.state.fromValue
+      fromValue = this.state.toValue
     } else {
-      fromValue = this.state.toValue;
-      toValue = this.state.fromValue;
+      fromValue = this.state.toValue
+      toValue = this.state.fromValue
     }
     this.setState(
       {
@@ -629,47 +626,47 @@ class Swap extends React.Component {
         receivedFlag: !receivedFlag,
         fromValue,
         toValue,
-        needApprove: false
+        needApprove: false,
       },
       async () => {
-        await this.calcPrice();
-        await this.props.pool.getBalanceAndApprove();
-      }
-    );
-  };
+        await this.calcPrice()
+        await this.props.pool.getBalanceAndApprove()
+      },
+    )
+  }
 
   hideAddRecipient = () => {
     this.setState({ addRecipient: false, recipientAddr: '' }, () => {
-      this.checkInput();
-    });
-  };
+      this.checkInput()
+    })
+  }
 
-  onRecipientChange = e => {
-    const value = e.target.value;
+  onRecipientChange = (e) => {
+    const value = e.target.value
     this.setState({ recipientAddr: value }, () => {
-      this.checkInput();
-    });
-  };
+      this.checkInput()
+    })
+  }
 
   showSettingModal = () => {
-    this.props.network.setData({ settingVisibleV2: true });
-  };
+    this.props.network.setData({ settingVisibleV2: true })
+  }
 
   initSwapModal = () => {
-    const fromToken = this.props.pool.swapToken.fromToken;
-    const toToken = this.props.pool.swapToken.toToken;
-    const needApprove = this.state.needApprove;
-    const recipientAddr = this.state.recipientAddr;
-    const swapPopTitle = recipientAddr ? intl.get('swap.action_swapSend') : intl.get('swap.action_swap');
+    const fromToken = this.props.pool.swapToken.fromToken
+    const toToken = this.props.pool.swapToken.toToken
+    const needApprove = this.state.needApprove
+    const recipientAddr = this.state.recipientAddr
+    const swapPopTitle = recipientAddr ? intl.get('swap.action_swapSend') : intl.get('swap.action_swap')
     const swapPopBtn = ['orange', 'red'].includes(this.state.priceImpactColor)
       ? intl.get('swap.action_swapStill')
       : recipientAddr
-        ? intl.get('swap.confirm_swapSend')
-        : intl.get('swap.confirm_swap');
+      ? intl.get('swap.confirm_swapSend')
+      : intl.get('swap.confirm_swap')
     const swapActionTitle = recipientAddr
       ? intl.get('action.swapSendAct', { from: fromToken.tokenSymbol, to: toToken.tokenSymbol })
-      : intl.get('action.swapAct', { from: fromToken.tokenSymbol, to: toToken.tokenSymbol });
-    const swapActionError = recipientAddr ? intl.get('action.swapSendActErr') : intl.get('action.swapActErr');
+      : intl.get('action.swapAct', { from: fromToken.tokenSymbol, to: toToken.tokenSymbol })
+    const swapActionError = recipientAddr ? intl.get('action.swapSendActErr') : intl.get('action.swapActErr')
 
     return {
       swapPopTitle,
@@ -689,43 +686,43 @@ class Swap extends React.Component {
       actionStarted: false,
       successFromValue: '',
       successToValue: '',
-      miniPopVisible: false
-    };
-  };
+      miniPopVisible: false,
+    }
+  }
 
   showSwapModal = () => {
     this.setState({ ...this.initSwapModal(), swapVisible: true }, () => {
-      this.onRetryAction();
-    });
-  };
+      this.onRetryAction()
+    })
+  }
 
   beforeHideSwapModal = () => {
-    const actionStarted = this.state.actionStarted;
+    const actionStarted = this.state.actionStarted
 
     if (actionStarted) {
-      this.setState({ miniPopVisible: true });
+      this.setState({ miniPopVisible: true })
     } else {
-      this.hideSwapModal();
+      this.hideSwapModal()
     }
-  };
+  }
 
   hideSwapModal = () => {
     this.setState({ swapVisible: false }, () => {
       setTimeout(() => {
         this.setState({
-          ...this.initSwapModal()
-        });
-      }, 1000);
-    });
-  };
+          ...this.initSwapModal(),
+        })
+      }, 1000)
+    })
+  }
 
   approveToken = async () => {
-    const tokenAddress = this.props.pool.swapToken.fromToken.tokenAddress;
-    const router = Config.v2Contract.router;
+    const tokenAddress = this.props.pool.swapToken.fromToken.tokenAddress
+    const router = Config.v2Contract.router
     const txid = await approve(tokenAddress, router, {
       title: 'swap.pop_title_approve',
-      obj: { token: this.props.pool.swapToken.fromToken.tokenSymbol }
-    });
+      obj: { token: this.props.pool.swapToken.fromToken.tokenSymbol },
+    })
 
     if (txid) {
       this.setState(
@@ -734,102 +731,102 @@ class Swap extends React.Component {
           actionInfo: intl.get('action.doingBtn'),
           actionDisabled: true,
           actionStarted: true,
-          needApprove: false
+          needApprove: false,
         },
         () => {
           setTimeout(() => {
             this.setState({
               approveActionState: 'success',
-              actionState: 'info'
-            });
-          }, 5000);
-        }
-      );
+              actionState: 'info',
+            })
+          }, 5000)
+        },
+      )
     } else {
       this.setState({
         approveActionState: 'error',
         actionRetry: 'approveToken',
         actionInfo: intl.get('action.retryBtn'),
         actionDisabled: false,
-        actionStarted: true
-      });
+        actionStarted: true,
+      })
     }
-  };
+  }
 
   beforeSwapToken = async () => {
     this.setState(
       {
         actionStarted: true,
         swapPopBtn: intl.get('action.startBtn'),
-        swapPopBtnDisabled: true
+        swapPopBtnDisabled: true,
       },
       () => {
-        this.swapToken();
-      }
-    );
-  };
+        this.swapToken()
+      },
+    )
+  }
 
   getSwapFuncType = (fromToken, toToken) => {
-    const { receivedFlag, swapTRXState } = this.state;
+    const { receivedFlag, swapTRXState } = this.state
     if (swapTRXState) {
       if (fromToken.tokenAddress === Config.trxFakeAddress) {
-        return 'deposit';
+        return 'deposit'
       }
-      return 'withdraw';
+      return 'withdraw'
     }
     if (receivedFlag) {
       if (fromToken.tokenAddress === Config.trxFakeAddress) {
-        return 'swapExactETHForTokens';
+        return 'swapExactTRXForTokens'
       }
       if (toToken.tokenAddress === Config.trxFakeAddress) {
-        return 'swapExactTokensForETH';
+        return 'swapExactTokensForTRX'
       }
-      return 'swapExactTokensForTokens';
+      return 'swapExactTokensForTokens'
     }
     if (fromToken.tokenAddress === Config.trxFakeAddress) {
-      return 'swapETHForExactTokens';
+      return 'swapTRXForExactTokens'
     }
     if (toToken.tokenAddress === Config.trxFakeAddress) {
-      return 'swapTokensForExactETH';
+      return 'swapTokensForExactTRX'
     }
-    return 'swapTokensForExactTokens';
-  };
+    return 'swapTokensForExactTokens'
+  }
 
   swapToken = async () => {
-    const fromToken = this.props.pool.swapToken.fromToken;
-    const toToken = this.props.pool.swapToken.toToken;
-    const fromValue = this.state.fromValue;
-    const toValue = this.state.toValue;
-    const recipientAddr = this.state.recipientAddr;
-    const needApprove = this.state.needApprove;
-    const { swapTRXState, dependentValueSunBig } = this.state;
-    const successFromValue = fromValue;
-    const successToValue = toValue;
-    let txid = '';
+    const fromToken = this.props.pool.swapToken.fromToken
+    const toToken = this.props.pool.swapToken.toToken
+    const fromValue = this.state.fromValue
+    const toValue = this.state.toValue
+    const recipientAddr = this.state.recipientAddr
+    const needApprove = this.state.needApprove
+    const { swapTRXState, dependentValueSunBig } = this.state
+    const successFromValue = fromValue
+    const successToValue = toValue
+    let txid = ''
     const intlObj = {
       title: recipientAddr && !swapTRXState ? 'swap.pop_title_swap_send' : 'swap.pop_title_swap',
       obj: {
         from: `${formatNumber(toBigNumberNew(fromValue), fromToken.tokenDecimal)} ${fromToken.tokenSymbol}`,
         to: `${formatNumber(toBigNumberNew(toValue), toToken.tokenDecimal)} ${toToken.tokenSymbol}`,
-        addr: !swapTRXState ? recipientAddr : window.defaultAccount
-      }
-    };
-    const { bestTrade } = this.state;
+        addr: !swapTRXState ? recipientAddr : window.defaultAccount,
+      },
+    }
+    const { bestTrade } = this.state
 
-    const swapFuncType = this.getSwapFuncType(fromToken, toToken, bestTrade);
+    const swapFuncType = this.getSwapFuncType(fromToken, toToken, bestTrade)
 
     if (swapTRXState) {
       txid = await swapFuncV2[swapFuncType]({
         amountIn: toBigNumberNew(fromValue).times(BigNumber(10).pow(fromToken.tokenDecimal))._toIntegerDown()._toHex(),
         amountOut: toBigNumberNew(toValue).times(BigNumber(10).pow(toToken.tokenDecimal))._toIntegerDown()._toHex(),
-        intlObj
-      });
+        intlObj,
+      })
     } else {
-      const { route } = this.state.bestTrade;
-      const pathTokens = route.path || [];
-      const path = pathTokens.map(item => {
-        return item.tokenAddress === Config.trxFakeAddress ? Config.wtrxAddress : item.tokenAddress;
-      });
+      const { route } = this.state.bestTrade
+      const pathTokens = route.path || []
+      const path = pathTokens.map((item) => {
+        return item.tokenAddress === Config.trxFakeAddress ? Config.wtrxAddress : item.tokenAddress
+      })
       txid = await swapFuncV2[swapFuncType]({
         amountIn: toBigNumberNew(fromValue).times(BigNumber(10).pow(fromToken.tokenDecimal))._toIntegerDown()._toHex(),
         amountOut: toBigNumberNew(toValue).times(BigNumber(10).pow(toToken.tokenDecimal))._toIntegerDown()._toHex(),
@@ -837,24 +834,24 @@ class Swap extends React.Component {
         deadline: await calcDeadline(this.props.network.settingDeadlineV2),
         to: recipientAddr || window.defaultAccount,
         path,
-        intlObj
-      });
+        intlObj,
+      })
     }
     if (txid) {
       let newState = {
         swapErrorInfo: '',
         swapPopBtn: intl.get('action.doingBtn'),
         swapPopBtnDisabled: true,
-        actionStarted: true
-      };
+        actionStarted: true,
+      }
       if (needApprove) {
         newState = {
           actionInfo: intl.get('action.doingBtn'),
           actionDisabled: true,
           swapActionState: 'pending',
           actionState: 'line',
-          actionStarted: true
-        };
+          actionStarted: true,
+        }
       }
 
       this.setState(newState, () => {
@@ -866,19 +863,19 @@ class Swap extends React.Component {
             successToValue,
             actionRetry: '',
             actionState: 'success',
-            actionStarted: false
-          });
-          await this.props.pool.getBalanceAndApprove();
-          await this.calcPrice();
-        }, 5000);
-      });
+            actionStarted: false,
+          })
+          await this.props.pool.getBalanceAndApprove()
+          await this.calcPrice()
+        }, 5000)
+      })
     } else {
       let newState = {
         swapErrorInfo: recipientAddr ? intl.get('action.swapSendActErr') : intl.get('action.swapActErr'),
         swapPopBtn: intl.get('action.retryBtn'),
         swapPopBtnDisabled: false,
-        actionStarted: true
-      };
+        actionStarted: true,
+      }
       if (needApprove) {
         newState = {
           actionState: 'line',
@@ -886,19 +883,19 @@ class Swap extends React.Component {
           actionRetry: 'swapToken',
           actionInfo: intl.get('action.retryBtn'),
           actionDisabled: false,
-          actionStarted: true
-        };
+          actionStarted: true,
+        }
       }
 
-      this.setState(newState);
+      this.setState(newState)
     }
-  };
+  }
 
   onRetryAction = () => {
-    let actionRetry = this.state.actionRetry;
-    const needApprove = this.state.needApprove;
+    let actionRetry = this.state.actionRetry
+    const needApprove = this.state.needApprove
     if (!actionRetry && needApprove) {
-      actionRetry = 'approveToken';
+      actionRetry = 'approveToken'
     }
 
     switch (actionRetry) {
@@ -906,48 +903,48 @@ class Swap extends React.Component {
         this.setState(
           { approveActionState: 'start', actionInfo: intl.get('action.startBtn'), actionDisabled: true },
           () => {
-            this.approveToken();
-          }
-        );
-        break;
+            this.approveToken()
+          },
+        )
+        break
       case 'swapToken':
         this.setState(
           { swapActionState: 'start', actionInfo: intl.get('action.startBtn'), actionDisabled: true },
           () => {
-            this.swapToken();
-          }
-        );
-        break;
+            this.swapToken()
+          },
+        )
+        break
       default:
-        break;
+        break
     }
-  };
+  }
 
   miniPopOk = () => {
-    const needApprove = this.state.needApprove;
+    const needApprove = this.state.needApprove
     this.setState(
       {
-        miniPopVisible: false
+        miniPopVisible: false,
       },
       async () => {
-        this.hideSwapModal();
+        this.hideSwapModal()
         if (needApprove) {
-          await this.props.pool.getBalanceAndApprove();
+          await this.props.pool.getBalanceAndApprove()
         }
-      }
-    );
-  };
+      },
+    )
+  }
 
   miniPopCancel = () => {
     this.setState({
-      miniPopVisible: false
-    });
-  };
+      miniPopVisible: false,
+    })
+  }
 
   transRouteRender = () => {
-    const { bestTrade = {} } = this.state;
-    const path = bestTrade.route.path || [];
-    const len = path.length;
+    const { bestTrade = {} } = this.state
+    const path = bestTrade.route.path || []
+    const len = path.length
     return (
       <div className="tr-content">
         <p>
@@ -971,30 +968,30 @@ class Swap extends React.Component {
           </ul>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
-  useSafeMax = type => {
-    const { swapToken } = this.props.pool;
-    const { fromToken, toToken } = swapToken;
+  useSafeMax = (type) => {
+    const { swapToken } = this.props.pool
+    const { fromToken, toToken } = swapToken
 
     if (type === 'from') {
-      const fromValue = _toFormat(toBigNumberNew(fromToken.balance).minus(Config.swapFeeAmountV2));
+      const fromValue = _toFormat(toBigNumberNew(fromToken.balance).minus(Config.swapFeeAmountV2))
       this.setState({ fromValue, receivedFlag: true }, async () => {
-        await this.calcPrice();
-      });
+        await this.calcPrice()
+      })
     } else if (type === 'to') {
-      const toValue = _toFormat(toBigNumberNew(toToken.balance).minus(Config.swapFeeAmountV2));
+      const toValue = _toFormat(toBigNumberNew(toToken.balance).minus(Config.swapFeeAmountV2))
       this.setState({ toValue }, async () => {
-        await this.calcPrice();
-      });
+        await this.calcPrice()
+      })
     }
-  };
+  }
 
   render() {
-    const { swapToken, modalVisibleInfo } = this.props.pool;
-    const { fromToken, toToken } = swapToken;
-    const { priceStr, priceInverseStr, dependentValue, swapTRXState, bestTrade } = this.state;
+    const { swapToken, modalVisibleInfo } = this.props.pool
+    const { fromToken, toToken } = swapToken
+    const { priceStr, priceInverseStr, dependentValue, swapTRXState, bestTrade } = this.state
     return (
       <Layout className="swap-content">
         {/* from */}
@@ -1024,7 +1021,7 @@ class Swap extends React.Component {
               ) : null}
               <SelectToken
                 showModal={() => {
-                  this.props.pool.showModal(1);
+                  this.props.pool.showModal(1)
                 }}
                 token={fromToken}
               ></SelectToken>
@@ -1032,8 +1029,8 @@ class Swap extends React.Component {
                 modalVisible={modalVisibleInfo.visible1}
                 onCancel={() => this.props.pool.showModal(1, false)}
                 type={1}
-                onChangeToken={item => {
-                  this.onFromTokenChange(item);
+                onChangeToken={(item) => {
+                  this.onFromTokenChange(item)
                 }}
               />
             </div>
@@ -1042,7 +1039,6 @@ class Swap extends React.Component {
 
         {/* price */}
         <div className="flex justify-content rates">
-
           <div className="word-break">{intl.get('swap.input_from_price')}</div>
           <div className="flex ai-center between">
             {fromToken.tokenAddress && toToken.tokenAddress ? (
@@ -1050,27 +1046,27 @@ class Swap extends React.Component {
                 <span className="swap-token">
                   {this.state.priceInverseFlag
                     ? intl.get('swap.input_from_per', {
-                      toToken: fromToken.tokenSymbol,
-                      price: formatNumberNew(priceInverseStr, {
-                        miniText: Config.minPrice,
-                        miniTextNoZero: true,
-                        separator: false,
-                        dp: toToken.tokenDecimal,
-                        cutZero: true
-                      }),
-                      fromToken: toToken.tokenSymbol
-                    })
+                        toToken: fromToken.tokenSymbol,
+                        price: formatNumberNew(priceInverseStr, {
+                          miniText: Config.minPrice,
+                          miniTextNoZero: true,
+                          separator: false,
+                          dp: toToken.tokenDecimal,
+                          cutZero: true,
+                        }),
+                        fromToken: toToken.tokenSymbol,
+                      })
                     : intl.get('swap.input_from_per', {
-                      toToken: this.props.pool.swapToken.toToken.tokenSymbol,
-                      price: formatNumberNew(priceStr, {
-                        miniText: Config.minPrice,
-                        miniTextNoZero: true,
-                        separator: false,
-                        dp: fromToken.tokenDecimal,
-                        cutZero: true
-                      }),
-                      fromToken: this.props.pool.swapToken.fromToken.tokenSymbol
-                    })}
+                        toToken: this.props.pool.swapToken.toToken.tokenSymbol,
+                        price: formatNumberNew(priceStr, {
+                          miniText: Config.minPrice,
+                          miniTextNoZero: true,
+                          separator: false,
+                          dp: fromToken.tokenDecimal,
+                          cutZero: true,
+                        }),
+                        fromToken: this.props.pool.swapToken.fromToken.tokenSymbol,
+                      })}
                 </span>
                 <img src={perIcon} alt="" onClick={this.switchPriceInverseFlag} />
               </React.Fragment>
@@ -1086,8 +1082,8 @@ class Swap extends React.Component {
               {intl.getHTML('list.trx_tip_3', { value: Config.swapFeeAmountV2 })}
             </div>
           ) : toBigNumberNew(fromToken.balance)
-            .minus(Config.swapFeeAmountV2)
-            .lt(toBigNumberNew(this.state.fromValue)) ? (
+              .minus(Config.swapFeeAmountV2)
+              .lt(toBigNumberNew(this.state.fromValue)) ? (
             <div className="safe-amount-tip safe-amount">
               {intl.getHTML('list.trx_tip_1', { value: Config.swapFeeAmountV2 })}{' '}
               <em onClick={() => this.useSafeMax('from')}>{intl.get('list.trx_tip_2')}</em>
@@ -1125,7 +1121,7 @@ class Swap extends React.Component {
             </div>
             <SelectToken
               showModal={() => {
-                this.props.pool.showModal(2);
+                this.props.pool.showModal(2)
               }}
               token={toToken}
             ></SelectToken>
@@ -1133,8 +1129,8 @@ class Swap extends React.Component {
               modalVisible={modalVisibleInfo.visible2}
               onCancel={() => this.props.pool.showModal(2, false)}
               type={2}
-              onChangeToken={item => {
-                this.onToTokenChange(item);
+              onChangeToken={(item) => {
+                this.onToTokenChange(item)
               }}
             />
           </div>
@@ -1182,10 +1178,10 @@ class Swap extends React.Component {
             ) : (
               <div className="add-recipient-btn new-recipient">
                 {this.state.fromValue &&
-                  this.state.toValue &&
-                  bestTrade &&
-                  bestTrade.route &&
-                  bestTrade.route.path.length > 0 ? (
+                this.state.toValue &&
+                bestTrade &&
+                bestTrade.route &&
+                bestTrade.route.path.length > 0 ? (
                   <div className="flex trans-route">
                     <Tooltip
                       title={this.transRouteRender()}
@@ -1236,9 +1232,9 @@ class Swap extends React.Component {
                       <img
                         src={this.props.pool.swapToken.fromToken.tokenLogoUrl}
                         alt="logo"
-                        onError={e => {
-                          e.target.onerror = null;
-                          e.target.src = defaultLogoUrl;
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = defaultLogoUrl
                         }}
                       />
                     )}
@@ -1252,15 +1248,15 @@ class Swap extends React.Component {
                           <img
                             src={this.props.pool.swapToken.fromToken.tokenLogoUrl}
                             alt="logo"
-                            onError={e => {
-                              e.target.onerror = null;
-                              e.target.src = defaultLogoUrl;
+                            onError={(e) => {
+                              e.target.onerror = null
+                              e.target.src = defaultLogoUrl
                             }}
                           />
                         )}
                         <span>{this.props.pool.swapToken.fromToken.tokenSymbol}</span>
                       </React.Fragment>,
-                      this.props.pool.swapToken.fromToken.tokenAddress
+                      this.props.pool.swapToken.fromToken.tokenAddress,
                     )}
                   </React.Fragment>
                 )
@@ -1275,9 +1271,9 @@ class Swap extends React.Component {
                       <img
                         src={this.props.pool.swapToken.toToken.tokenLogoUrl}
                         alt="logo"
-                        onError={e => {
-                          e.target.onerror = null;
-                          e.target.src = defaultLogoUrl;
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = defaultLogoUrl
                         }}
                       />
                     )}
@@ -1291,15 +1287,15 @@ class Swap extends React.Component {
                           <img
                             src={this.props.pool.swapToken.toToken.tokenLogoUrl}
                             alt="logo"
-                            onError={e => {
-                              e.target.onerror = null;
-                              e.target.src = defaultLogoUrl;
+                            onError={(e) => {
+                              e.target.onerror = null
+                              e.target.src = defaultLogoUrl
                             }}
                           />
                         )}
                         <span>{this.props.pool.swapToken.toToken.tokenSymbol}</span>
                       </React.Fragment>,
-                      this.props.pool.swapToken.toToken.tokenAddress
+                      this.props.pool.swapToken.toToken.tokenAddress,
                     )}
                   </React.Fragment>
                 )
@@ -1329,10 +1325,10 @@ class Swap extends React.Component {
 
         {/* detail */}
         {!swapTRXState &&
-          this.state.fromValue &&
-          this.state.toValue &&
-          this.props.pool.swapToken.fromToken.tokenAddress &&
-          this.props.pool.swapToken.toToken.tokenAddress ? (
+        this.state.fromValue &&
+        this.state.toValue &&
+        this.props.pool.swapToken.fromToken.tokenAddress &&
+        this.props.pool.swapToken.toToken.tokenAddress ? (
           <div>
             <div className="flex justify-content detail-item">
               {this.state.receivedFlag ? (
@@ -1400,7 +1396,7 @@ class Swap extends React.Component {
               type="single"
               info={intl.get('swap.action_connect')}
               onClick={() => {
-                this.props.network.connectWallet();
+                this.props.network.connectWallet()
               }}
             />
           )}
@@ -1502,7 +1498,7 @@ class Swap extends React.Component {
                       dp: this.props.pool.swapToken.fromToken.tokenDecimal,
                       cutZero: true,
                       miniTextNoZero: true,
-                      miniText: Config.minPrice
+                      miniText: Config.minPrice,
                     })}
                     ${this.props.pool.swapToken.fromToken.tokenSymbol} `}
                   </div>
@@ -1512,7 +1508,7 @@ class Swap extends React.Component {
                       dp: this.props.pool.swapToken.toToken.tokenDecimal,
                       cutZero: true,
                       miniTextNoZero: true,
-                      miniText: Config.minPrice
+                      miniText: Config.minPrice,
                     })}
                     ${this.props.pool.swapToken.toToken.tokenSymbol} `}
                   </div>
@@ -1592,14 +1588,14 @@ class Swap extends React.Component {
                   <div>
                     {intl.get('swap.confirm_warning_output', {
                       amount: formatNumberNew(dependentValue, { dp: toToken.tokenDecimal }),
-                      token: this.props.pool.swapToken.toToken.tokenSymbol
+                      token: this.props.pool.swapToken.toToken.tokenSymbol,
                     })}
                   </div>
                 ) : (
                   <div>
                     {intl.get('swap.confirm_warning_input', {
                       amount: formatNumberNew(dependentValue, { dp: fromToken.tokenDecimal }),
-                      token: this.props.pool.swapToken.fromToken.tokenSymbol
+                      token: this.props.pool.swapToken.fromToken.tokenSymbol,
                     })}
                   </div>
                 )}
@@ -1661,8 +1657,8 @@ class Swap extends React.Component {
 
         <MiniPop visible={this.state.miniPopVisible} confirm={this.miniPopOk} cancel={this.miniPopCancel} />
       </Layout>
-    );
+    )
   }
 }
 
-export default Swap;
+export default Swap

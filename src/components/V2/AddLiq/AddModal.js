@@ -1,67 +1,67 @@
-import React from 'react';
-import intl from 'react-intl-universal';
-import { inject, observer } from 'mobx-react';
-import { Modal } from 'antd';
-import ActionLine from '../../ActionLine';
-import MiniPop from '../../MiniPop';
-import ActionBtns from '../../ActionBtns';
+import React from 'react'
+import intl from 'react-intl-universal'
+import { inject, observer } from 'mobx-react'
+import { Modal } from 'antd'
+import ActionLine from '../../ActionLine'
+import MiniPop from '../../MiniPop'
+import ActionBtns from '../../ActionBtns'
 import {
   addLiquidityV2,
   addLiquidityTRX,
   approveV2,
   calcDeadline,
   getExchangeInfoV2,
-  MAX_UINT256
-} from '../../../utils/blockchain';
-import { getModalLeft, formatNumber, formatNumberNew, BigNumber } from '../../../utils/helper';
-import Config from '../../../config';
-import '../../../assets/css/pool.scss';
-import transactionSuccessSvg from '../../../assets/images/TransactionSuccess.svg';
-import defaultLogoUrl from '../../../assets/images/default.png';
+  MAX_UINT256,
+} from '../../../utils/blockchain'
+import { getModalLeft, formatNumber, formatNumberNew, BigNumber } from '../../../utils/helper'
+import Config from '../../../config'
+import '../../../assets/css/pool.scss'
+import transactionSuccessSvg from '../../../assets/images/TransactionSuccess.svg'
+import defaultLogoUrl from '../../../assets/images/default.png'
 
 @inject('network')
 @inject('pool')
 @observer
 class AddModal extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
-      actionStarted: false
-    };
+      actionStarted: false,
+    }
   }
 
-  componentDidMount() { }
+  componentDidMount() {}
 
   cancel = () => {
-    const actionStarted = this.state.actionStarted;
+    const actionStarted = this.state.actionStarted
 
     if (actionStarted) {
-      this.setState({ miniPopVisible: true });
+      this.setState({ miniPopVisible: true })
     } else {
-      this.setState({ addVisible: false });
-      this.props.hideAddModal();
+      this.setState({ addVisible: false })
+      this.props.hideAddModal()
     }
-  };
+  }
 
   initAddModal = () => {
-    const { liqToken } = this.props.pool;
-    const { fromToken, toToken, tokenOneValue, tokenTwoValue } = liqToken;
-    const tokenOneBNValue = new BigNumber(tokenOneValue);
-    const tokenTwoBNValue = new BigNumber(tokenTwoValue);
+    const { liqToken } = this.props.pool
+    const { fromToken, toToken, tokenOneValue, tokenTwoValue } = liqToken
+    const tokenOneBNValue = new BigNumber(tokenOneValue)
+    const tokenTwoBNValue = new BigNumber(tokenTwoValue)
     let needApproveOne = true,
-      needApproveTwo = true;
+      needApproveTwo = true
     if (
       BigNumber(fromToken.approvedAmount).gte(tokenOneBNValue) ||
       fromToken.tokenAddress === Config.trxFakeAddress ||
       fromToken.tokenAddress === Config.wtrxAddress
     )
-      needApproveOne = false;
+      needApproveOne = false
     if (
       BigNumber(toToken.approvedAmount).gte(tokenTwoBNValue) ||
       toToken.tokenAddress === Config.trxFakeAddress ||
       toToken.tokenAddress === Config.wtrxAddress
     )
-      needApproveTwo = false;
+      needApproveTwo = false
 
     this.setState(
       {
@@ -72,7 +72,7 @@ class AddModal extends React.Component {
         supplyErrorInfo: '',
         createActionTitle: intl.get('action.createActV2', {
           token1: fromToken.tokenSymbol,
-          token2: toToken.tokenSymbol
+          token2: toToken.tokenSymbol,
         }),
         createActionError: intl.get('action.createActErr'),
         createActionFailed: intl.get('action.createActFailed'),
@@ -93,22 +93,22 @@ class AddModal extends React.Component {
         actionStarted: false,
         successOneValueStr: '',
         successTwoValueStr: '',
-        miniPopVisible: false
+        miniPopVisible: false,
       },
       () =>
         this.setState({ addVisible: true }, () => {
-          this.onRetryAction();
-        })
-    );
-  };
+          this.onRetryAction()
+        }),
+    )
+  }
 
   onRetryAction = () => {
-    let { needApproveOne, needApproveTwo, actionRetry } = this.state;
+    let { needApproveOne, needApproveTwo, actionRetry } = this.state
     if (!actionRetry) {
       if (needApproveOne) {
-        actionRetry = 'setApproveOne';
+        actionRetry = 'setApproveOne'
       } else if (needApproveTwo) {
-        actionRetry = 'setApproveTwo';
+        actionRetry = 'setApproveTwo'
       }
     }
 
@@ -117,35 +117,35 @@ class AddModal extends React.Component {
         this.setState(
           { approveActionOneState: 'start', actionInfo: intl.get('action.startBtn'), actionDisabled: true },
           () => {
-            this.setApprove('one');
-          }
-        );
-        break;
+            this.setApprove('one')
+          },
+        )
+        break
       case 'setApproveTwo':
         this.setState(
           {
             approveActionOneState: 'success',
             approveActionTwoState: 'start',
             actionInfo: intl.get('action.startBtn'),
-            actionDisabled: true
+            actionDisabled: true,
           },
           () => {
-            this.setApprove('two');
-          }
-        );
-        break;
+            this.setApprove('two')
+          },
+        )
+        break
       case 'supplyLiquidity':
         this.setState(
           { swapActionState: 'start', actionInfo: intl.get('action.startBtn'), actionDisabled: false },
           () => {
-            this.supplyLiquidity();
-          }
-        );
-        break;
+            this.supplyLiquidity()
+          },
+        )
+        break
       default:
-        break;
+        break
     }
-  };
+  }
 
   setApproveBarText = (whichToken, success) => {
     if (success) {
@@ -155,17 +155,17 @@ class AddModal extends React.Component {
             approveActionOneState: 'pending',
             actionInfo: intl.get('action.doingBtn'),
             actionDisabled: true,
-            actionStarted: true
+            actionStarted: true,
           },
           () => {
             setTimeout(() => {
               this.setState({
                 approveActionOneState: 'success',
-                approveActionTwoState: 'start'
-              });
-            }, 5000);
-          }
-        );
+                approveActionTwoState: 'start',
+              })
+            }, 5000)
+          },
+        )
       }
       if (whichToken === 'two') {
         this.setState(
@@ -173,122 +173,121 @@ class AddModal extends React.Component {
             approveActionTwoState: 'pending',
             actionInfo: intl.get('action.doingBtn'),
             actionDisabled: true,
-            actionStarted: true
+            actionStarted: true,
           },
           () => {
             setTimeout(() => {
               this.setState({
                 approveActionTwoState: 'success',
-                baseActionState: 'info'
-              });
-            }, 5000);
-          }
-        );
+                baseActionState: 'info',
+              })
+            }, 5000)
+          },
+        )
       }
     } else {
       if (whichToken === 'one') {
         this.setState({
-          approveActionOneState: 'error'
-        });
+          approveActionOneState: 'error',
+        })
       }
       if (whichToken === 'two') {
         this.setState({
-          approveActionTwoState: 'error'
-        });
+          approveActionTwoState: 'error',
+        })
       }
       this.setState({
         actionRetry: whichToken === 'one' ? 'setApproveOne' : 'setApproveTwo',
         actionInfo: intl.get('action.retryBtn'),
         actionDisabled: false,
-        actionStarted: true
-      });
+        actionStarted: true,
+      })
     }
-  };
+  }
 
-  setApprove = async whichToken => {
-    const { needApproveTwo } = this.state;
-    const { liqToken } = this.props.pool;
-    const { fromToken, toToken } = liqToken;
-    const { router } = Config.v2Contract;
-    let baseToken = toToken;
-    if (whichToken === 'one') baseToken = fromToken;
+  setApprove = async (whichToken) => {
+    const { needApproveTwo } = this.state
+    const { liqToken } = this.props.pool
+    const { fromToken, toToken } = liqToken
+    const { router } = Config.v2Contract
+    let baseToken = toToken
+    if (whichToken === 'one') baseToken = fromToken
     const intlObj = {
       title: 'pool.add_approve_token',
-      obj: { token: baseToken.tokenSymbol }
-    };
+      obj: { token: baseToken.tokenSymbol },
+    }
 
-    const txid = await approveV2(baseToken.tokenAddress, router, intlObj);
+    const txid = await approveV2(baseToken.tokenAddress, router, intlObj)
     if (txid) {
-      this.setApproveBarText(whichToken, true);
+      this.setApproveBarText(whichToken, true)
       if (whichToken === 'one') {
         this.setState({ needApproveOne: false }, () => {
           if (needApproveTwo) {
             this.setState(
               {
-                actionRetry: 'setApproveTwo'
+                actionRetry: 'setApproveTwo',
               },
               () => {
-                this.onRetryAction();
-              }
-            );
+                this.onRetryAction()
+              },
+            )
           } else {
             this.setState(
               {
-                baseActionState: 'info'
+                baseActionState: 'info',
               },
-              () => {
-              }
-            );
+              () => {},
+            )
           }
-        });
+        })
       } else {
-        this.setState({ needApproveTwo: false });
+        this.setState({ needApproveTwo: false })
       }
     } else {
-      this.setApproveBarText(whichToken, false);
+      this.setApproveBarText(whichToken, false)
     }
-  };
+  }
 
   beforeSupplyLiquidity = async () => {
     this.setState(
       {
         actionStarted: true,
         supplyPopBtn: intl.get('action.startBtn'),
-        supplyPopBtnDisabled: true
+        supplyPopBtnDisabled: true,
       },
       () => {
-        this.supplyLiquidity();
-      }
-    );
-  };
+        this.supplyLiquidity()
+      },
+    )
+  }
 
   supplyLiquidity = async () => {
-    const { needApproveOne, needApproveTwo } = this.state;
-    const { liqToken, exchangeInfo } = this.props.pool;
-    const { needCreate } = this.props;
-    const { tokenOneValue, tokenTwoValue, fromToken, toToken } = liqToken;
-    let { settingSlippageV2, defaultAccount } = this.props.network;
-    settingSlippageV2 = Number(settingSlippageV2);
-    let amountAMin, amountBMin;
-    const tokenOneBNValue = new BigNumber(tokenOneValue);
-    const tokenTwoBNValue = new BigNumber(tokenTwoValue);
-    let callValue1 = tokenOneBNValue.times(new BigNumber(10).pow(fromToken.tokenDecimal));
-    let callValue2 = tokenTwoBNValue.times(new BigNumber(10).pow(toToken.tokenDecimal));
+    const { needApproveOne, needApproveTwo } = this.state
+    const { liqToken, exchangeInfo } = this.props.pool
+    const { needCreate } = this.props
+    const { tokenOneValue, tokenTwoValue, fromToken, toToken } = liqToken
+    let { settingSlippageV2, defaultAccount } = this.props.network
+    settingSlippageV2 = Number(settingSlippageV2)
+    let amountAMin, amountBMin
+    const tokenOneBNValue = new BigNumber(tokenOneValue)
+    const tokenTwoBNValue = new BigNumber(tokenTwoValue)
+    let callValue1 = tokenOneBNValue.times(new BigNumber(10).pow(fromToken.tokenDecimal))
+    let callValue2 = tokenTwoBNValue.times(new BigNumber(10).pow(toToken.tokenDecimal))
 
     if (!exchangeInfo.poolExTokenOne.gt(0)) {
-      amountAMin = callValue1;
-      amountBMin = callValue2;
+      amountAMin = callValue1
+      amountBMin = callValue2
     } else {
       amountAMin = `0x${tokenOneBNValue
         .times(1 - settingSlippageV2 / 100)
         .times(new BigNumber(10).pow(fromToken.tokenDecimal))
         .integerValue(BigNumber.ROUND_DOWN)
-        .toString(16)}`;
+        .toString(16)}`
       amountBMin = `0x${tokenTwoBNValue
         .times(1 - settingSlippageV2 / 100)
         .times(new BigNumber(10).pow(toToken.tokenDecimal))
         .integerValue(BigNumber.ROUND_DOWN)
-        .toString(16)}`;
+        .toString(16)}`
     }
 
     const intlObj = {
@@ -297,17 +296,17 @@ class AddModal extends React.Component {
         trxAmount: formatNumber(tokenOneBNValue.toString(), fromToken.tokenDecimal),
         trx: fromToken.tokenSymbol,
         tokenAmount: formatNumber(tokenTwoBNValue.toString(), toToken.tokenDecimal),
-        tokenSymbol: toToken.tokenSymbol
-      }
-    };
+        tokenSymbol: toToken.tokenSymbol,
+      },
+    }
 
-    const successOneValueStr = tokenOneValue.toString();
-    const successTwoValueStr = tokenTwoValue.toString();
-    let txid = '';
+    const successOneValueStr = tokenOneValue.toString()
+    const successTwoValueStr = tokenTwoValue.toString()
+    let txid = ''
     if (fromToken.tokenAddress === Config.trxFakeAddress || toToken.tokenAddress === Config.trxFakeAddress) {
-      const anotherToken = fromToken.tokenAddress === Config.trxFakeAddress ? toToken : fromToken;
-      const anotherBNValue = fromToken.tokenAddress === Config.trxFakeAddress ? tokenTwoBNValue : tokenOneBNValue;
-      const precision = new BigNumber(10).pow(anotherToken.tokenDecimal);
+      const anotherToken = fromToken.tokenAddress === Config.trxFakeAddress ? toToken : fromToken
+      const anotherBNValue = fromToken.tokenAddress === Config.trxFakeAddress ? tokenTwoBNValue : tokenOneBNValue
+      const precision = new BigNumber(10).pow(anotherToken.tokenDecimal)
       const params = {
         token: anotherToken.tokenAddress,
         amountTokenDesired: anotherBNValue.times(precision)._toIntegerDown()._toHex(),
@@ -315,19 +314,19 @@ class AddModal extends React.Component {
           fromToken.tokenAddress === Config.trxFakeAddress
             ? BigNumber(amountBMin)._toIntegerDown()._toHex()
             : BigNumber(amountAMin)._toIntegerDown()._toHex(),
-        amountETHMin:
+        amounTRXHMin:
           fromToken.tokenAddress === Config.trxFakeAddress
             ? BigNumber(amountAMin)._toIntegerDown()._toHex()
             : BigNumber(amountBMin)._toIntegerDown()._toHex(),
         to: defaultAccount,
         deadline: await calcDeadline(this.props.network.settingDeadlineV2),
-        needCreate
-      };
-      const targetCallValue = fromToken.tokenAddress === Config.trxFakeAddress ? callValue1 : callValue2;
-      txid = await addLiquidityTRX(params, intlObj, BigNumber(targetCallValue)._toIntegerDown()._toHex());
+        needCreate,
+      }
+      const targetCallValue = fromToken.tokenAddress === Config.trxFakeAddress ? callValue1 : callValue2
+      txid = await addLiquidityTRX(params, intlObj, BigNumber(targetCallValue)._toIntegerDown()._toHex())
     } else {
-      const fromTokenPrecision = new BigNumber(10).pow(fromToken.tokenDecimal);
-      const toTokenPrecision = new BigNumber(10).pow(toToken.tokenDecimal);
+      const fromTokenPrecision = new BigNumber(10).pow(fromToken.tokenDecimal)
+      const toTokenPrecision = new BigNumber(10).pow(toToken.tokenDecimal)
       const params = {
         tokenA: fromToken.tokenAddress,
         tokenB: toToken.tokenAddress,
@@ -337,9 +336,9 @@ class AddModal extends React.Component {
         amountBMin: BigNumber(amountBMin)._toIntegerDown()._toHex(),
         to: defaultAccount,
         deadline: await calcDeadline(this.props.network.settingDeadlineV2),
-        needCreate
-      };
-      txid = await addLiquidityV2(params, intlObj);
+        needCreate,
+      }
+      txid = await addLiquidityV2(params, intlObj)
     }
 
     if (txid) {
@@ -347,16 +346,16 @@ class AddModal extends React.Component {
         supplyErrorInfo: '',
         supplyPopBtn: intl.get('action.doingBtn'),
         supplyPopBtnDisabled: true,
-        actionStarted: true
-      };
+        actionStarted: true,
+      }
       if (needApproveOne || needApproveTwo) {
         newState = {
           actionInfo: intl.get('action.doingBtn'),
           actionDisabled: true,
           supplyActionState: 'pending',
           baseActionState: 'line',
-          actionStarted: true
-        };
+          actionStarted: true,
+        }
       }
 
       this.setState(newState, () => {
@@ -366,20 +365,20 @@ class AddModal extends React.Component {
             baseActionState: 'success',
             actionStarted: false,
             successOneValueStr,
-            successTwoValueStr
-          });
-          liqToken.tokenOneValue = -1;
-          liqToken.tokenTwoValue = -1;
-          this.props.pool.setData({ liqToken });
-        }, 5000);
-      });
+            successTwoValueStr,
+          })
+          liqToken.tokenOneValue = -1
+          liqToken.tokenTwoValue = -1
+          this.props.pool.setData({ liqToken })
+        }, 5000)
+      })
     } else {
       let newState = {
         supplyErrorInfo: intl.get('action.supplyActErr'),
         supplyPopBtn: intl.get('action.retryBtn'),
         supplyPopBtnDisabled: false,
-        actionStarted: true
-      };
+        actionStarted: true,
+      }
       if (needApproveOne || needApproveTwo) {
         newState = {
           baseActionState: 'line',
@@ -387,13 +386,13 @@ class AddModal extends React.Component {
           actionRetry: 'supplyLiquidity',
           actionInfo: intl.get('action.retryBtn'),
           actionDisabled: false,
-          actionStarted: true
-        };
+          actionStarted: true,
+        }
       }
 
-      this.setState(newState);
+      this.setState(newState)
     }
-  };
+  }
 
   gotoPool = () => {
     const liqToken = {
@@ -404,7 +403,7 @@ class AddModal extends React.Component {
         trxBalance: new BigNumber(0),
         tokenBalance: new BigNumber(0),
         approvedAmount: new BigNumber(MAX_UINT256),
-        tokenLogoUrl: Config.trxLogoUrl
+        tokenLogoUrl: Config.trxLogoUrl,
       },
       fromBalance: new BigNumber(-1),
       toToken: { tokenAddress: '', tokenSymbol: '', approvedAmount: new BigNumber(0) },
@@ -416,9 +415,9 @@ class AddModal extends React.Component {
       tokenStr4: '',
       pairAddress: '',
       tokenOneValue: -1,
-      tokenTwoValue: -1
-    };
-    this.props.pool.setData({ liqToken });
+      tokenTwoValue: -1,
+    }
+    this.props.pool.setData({ liqToken })
     this.props.pool.setData({
       exchangeInfo: {
         price1: '--',
@@ -428,85 +427,85 @@ class AddModal extends React.Component {
         pairTokens: new BigNumber(0),
         poolExTokenOne: new BigNumber(0),
         poolExTokenTwo: new BigNumber(0),
-        totalSupply: new BigNumber(0)
-      }
-    });
-    this.setState({});
+        totalSupply: new BigNumber(0),
+      },
+    })
+    this.setState({})
     this.props.pool.setData({
-      actionLiqV2: 0
-    });
-  };
+      actionLiqV2: 0,
+    })
+  }
 
   miniPopOk = () => {
-    const { liqToken } = this.props.pool;
-    const { fromToken, toToken, tokenOneValue, tokenTwoValue } = liqToken;
-    const tokenOneBNValue = new BigNumber(tokenOneValue);
-    const tokenTwoBNValue = new BigNumber(tokenTwoValue);
+    const { liqToken } = this.props.pool
+    const { fromToken, toToken, tokenOneValue, tokenTwoValue } = liqToken
+    const tokenOneBNValue = new BigNumber(tokenOneValue)
+    const tokenTwoBNValue = new BigNumber(tokenTwoValue)
     this.setState(
       {
         miniPopVisible: false,
-        addVisible: false
+        addVisible: false,
       },
       async () => {
-        this.props.hideAddModal();
+        this.props.hideAddModal()
         if (
           BigNumber(toToken.approvedAmount).lt(tokenTwoBNValue) ||
           BigNumber(fromToken.approvedAmount).lt(tokenOneBNValue)
         ) {
-          let { liqToken } = this.props.pool;
-          let { fromToken, toToken } = liqToken;
-          const userAddr = this.props.network.defaultAccount;
+          let { liqToken } = this.props.pool
+          let { fromToken, toToken } = liqToken
+          const userAddr = this.props.network.defaultAccount
           const { exchangeAddr, allowanceA, allowanceB } = await getExchangeInfoV2(
             userAddr,
             fromToken.tokenAddress,
-            toToken.tokenAddress
-          );
+            toToken.tokenAddress,
+          )
           if (exchangeAddr) {
-            this.setState({ exchangeStatus: 0 });
+            this.setState({ exchangeStatus: 0 })
           }
-          fromToken.approvedAmount = allowanceA.div(new BigNumber(10).pow(fromToken.tokenDecimal));
-          toToken.approvedAmount = allowanceB.div(new BigNumber(10).pow(toToken.tokenDecimal));
-          this.setState({ liqToken });
+          fromToken.approvedAmount = allowanceA.div(new BigNumber(10).pow(fromToken.tokenDecimal))
+          toToken.approvedAmount = allowanceB.div(new BigNumber(10).pow(toToken.tokenDecimal))
+          this.setState({ liqToken })
         }
-      }
-    );
-  };
+      },
+    )
+  }
 
   miniPopCancel = () => {
     this.setState({
-      miniPopVisible: false
-    });
-  };
+      miniPopVisible: false,
+    })
+  }
 
   render() {
-    const { liqToken, exchangeInfo } = this.props.pool;
-    const { poolExTokenOne, poolExTokenTwo, totalSupply } = exchangeInfo;
-    const { fromToken, toToken, tokenOneValue, tokenTwoValue } = liqToken;
-    const tokenOneBNValue = new BigNumber(tokenOneValue);
-    const tokenTwoBNValue = new BigNumber(tokenTwoValue);
-    let { settingSlippageV2 } = this.props.network;
-    const { shareOfPool } = this.props;
-    const { successOneValueStr, successTwoValueStr } = this.state;
+    const { liqToken, exchangeInfo } = this.props.pool
+    const { poolExTokenOne, poolExTokenTwo, totalSupply } = exchangeInfo
+    const { fromToken, toToken, tokenOneValue, tokenTwoValue } = liqToken
+    const tokenOneBNValue = new BigNumber(tokenOneValue)
+    const tokenTwoBNValue = new BigNumber(tokenTwoValue)
+    let { settingSlippageV2 } = this.props.network
+    const { shareOfPool } = this.props
+    const { successOneValueStr, successTwoValueStr } = this.state
     let exchangeTokenVal = tokenOneBNValue
       .times(BigNumber(10).pow(fromToken.tokenDecimal))
       .times(tokenTwoBNValue.times(BigNumber(10).pow(toToken.tokenDecimal)))
       .sqrt()
-      .div(Config.defaultTokenPrecision);
-    let modalPrice1 = tokenTwoBNValue.div(tokenOneBNValue);
-    let modalPrice2 = tokenOneBNValue.div(tokenTwoBNValue);
+      .div(Config.defaultTokenPrecision)
+    let modalPrice1 = tokenTwoBNValue.div(tokenOneBNValue)
+    let modalPrice2 = tokenOneBNValue.div(tokenTwoBNValue)
     if (BigNumber(exchangeInfo.poolExTokenOne).gt(0)) {
-      const exTokenNumOne = tokenOneBNValue.times(totalSupply).div(poolExTokenOne);
-      const exTokenNumTwo = tokenTwoBNValue.times(totalSupply).div(poolExTokenTwo);
-      exchangeTokenVal = exTokenNumOne.lt(exTokenNumTwo) ? exTokenNumOne : exTokenNumTwo;
-      modalPrice1 = exchangeInfo.price2;
-      modalPrice2 = exchangeInfo.price1;
+      const exTokenNumOne = tokenOneBNValue.times(totalSupply).div(poolExTokenOne)
+      const exTokenNumTwo = tokenTwoBNValue.times(totalSupply).div(poolExTokenTwo)
+      exchangeTokenVal = exTokenNumOne.lt(exTokenNumTwo) ? exTokenNumOne : exTokenNumTwo
+      modalPrice1 = exchangeInfo.price2
+      modalPrice2 = exchangeInfo.price1
     }
-    const exchangeTokenNum = formatNumberNew(exchangeTokenVal, { dp: Config.defaultTokenDecimal, cutZero: true });
-    let shareOfPoolStr = formatNumberNew(shareOfPool, { dp: 2, cutZero: true });
+    const exchangeTokenNum = formatNumberNew(exchangeTokenVal, { dp: Config.defaultTokenDecimal, cutZero: true })
+    let shareOfPoolStr = formatNumberNew(shareOfPool, { dp: 2, cutZero: true })
     if (isNaN(shareOfPoolStr)) {
-      shareOfPoolStr = '--';
+      shareOfPoolStr = '--'
     } else if (BigNumber(shareOfPool).gt(0) && BigNumber(shareOfPool).lt(0.01)) {
-      shareOfPoolStr = '<0.01';
+      shareOfPoolStr = '<0.01'
     }
 
     const {
@@ -529,8 +528,8 @@ class AddModal extends React.Component {
       createActionError,
       createActionFailed,
       createActionTitle,
-      addVisible
-    } = this.state;
+      addVisible,
+    } = this.state
 
     return (
       <>
@@ -627,9 +626,9 @@ class AddModal extends React.Component {
                     <img
                       src={fromToken.tokenLogoUrl || defaultLogoUrl}
                       alt=""
-                      onError={e => {
-                        e.target.onerror = null;
-                        e.target.src = defaultLogoUrl;
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = defaultLogoUrl
                       }}
                     />
                     <span>{tokenOneValue}</span>
@@ -642,9 +641,9 @@ class AddModal extends React.Component {
                     <img
                       src={toToken.tokenLogoUrl || defaultLogoUrl}
                       alt=""
-                      onError={e => {
-                        e.target.onerror = null;
-                        e.target.src = defaultLogoUrl;
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = defaultLogoUrl
                       }}
                     />
                     <span>{tokenTwoValue}</span>
@@ -659,9 +658,9 @@ class AddModal extends React.Component {
                         .div(BigNumber(10).pow(Number(toToken.tokenDecimal)))
                         .gt(modalPrice1)
                         ? '< ' +
-                        BigNumber(1)
-                          .div(BigNumber(10).pow(Number(toToken.tokenDecimal)))
-                          .toString()
+                          BigNumber(1)
+                            .div(BigNumber(10).pow(Number(toToken.tokenDecimal)))
+                            .toString()
                         : formatNumberNew(modalPrice1, { dp: toToken.tokenDecimal, cutZero: true })}{' '}
                       {toToken.tokenSymbol}
                     </p>
@@ -671,9 +670,9 @@ class AddModal extends React.Component {
                         .div(BigNumber(10).pow(Number(fromToken.tokenDecimal)))
                         .gt(modalPrice2)
                         ? '< ' +
-                        BigNumber(1)
-                          .div(BigNumber(10).pow(Number(fromToken.tokenDecimal)))
-                          .toString()
+                          BigNumber(1)
+                            .div(BigNumber(10).pow(Number(fromToken.tokenDecimal)))
+                            .toString()
                         : formatNumberNew(modalPrice2, { dp: fromToken.tokenDecimal, cutZero: true })}{' '}
                       {fromToken.tokenSymbol}
                     </p>
@@ -725,8 +724,8 @@ class AddModal extends React.Component {
         </Modal>
         <MiniPop visible={this.state.miniPopVisible} confirm={this.miniPopOk} cancel={this.miniPopCancel} />
       </>
-    );
+    )
   }
 }
 
-export default AddModal;
+export default AddModal

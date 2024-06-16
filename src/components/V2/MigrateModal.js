@@ -1,28 +1,28 @@
-import React from 'react';
-import intl from 'react-intl-universal';
-import { inject, observer } from 'mobx-react';
-import { Modal } from 'antd';
-import '../../assets/css/migrateModel.scss';
-import '../../assets/css/pool.scss';
-import { getModalLeft, formatNumber, formatNumberNew } from '../../utils/helper';
-import { approve, migrate, calcDeadline, isApproved } from '../../utils/blockchain';
-import Config from '../../config';
-import BigNumber from 'bignumber.js';
-import Settings from '../Settings';
-import ActionLine from '../ActionLine';
-import MiniPop from '../MiniPop';
-import ActionBtns from '../ActionBtns';
-import Tip from '../Tip';
-import isMobile from 'ismobilejs';
-import transactionSuccessSvg from '../../assets/images/TransactionSuccess.svg';
+import React from 'react'
+import intl from 'react-intl-universal'
+import { inject, observer } from 'mobx-react'
+import { Modal } from 'antd'
+import '../../assets/css/migrateModel.scss'
+import '../../assets/css/pool.scss'
+import { getModalLeft, formatNumber, formatNumberNew } from '../../utils/helper'
+import { approve, migrate, calcDeadline, isApproved } from '../../utils/blockchain'
+import Config from '../../config'
+import BigNumber from 'bignumber.js'
+import Settings from '../Settings'
+import ActionLine from '../ActionLine'
+import MiniPop from '../MiniPop'
+import ActionBtns from '../ActionBtns'
+import Tip from '../Tip'
+import isMobile from 'ismobilejs'
+import transactionSuccessSvg from '../../assets/images/TransactionSuccess.svg'
 
 @inject('network')
 @inject('pool')
 @observer
 class MigrateModal extends React.Component {
   constructor(props) {
-    super(props);
-    this.settingsRef = React.createRef();
+    super(props)
+    this.settingsRef = React.createRef()
     this.state = {
       visible: false,
       step: 1,
@@ -43,63 +43,63 @@ class MigrateModal extends React.Component {
       oldRate: formatNumberNew(BigNumber(props.migrateData.trx).div(BigNumber(props.migrateData.value)), {
         miniText: 0.0001,
         cutZero: true,
-        dp: 4
+        dp: 4,
       }),
       newRateType: 1,
       newRateLabel: props.migrateData.tokenSymbol + '-TRX',
       newRate: formatNumberNew(
         BigNumber(props.migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6))).div(
-          BigNumber(props.migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(props.migrateData.tokenDecimal)))
+          BigNumber(props.migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(props.migrateData.tokenDecimal))),
         ),
-        { miniText: 0.0001, cutZero: true, dp: 4 }
+        { miniText: 0.0001, cutZero: true, dp: 4 },
       ),
       refundedValue: '',
       refundedToken: '',
-      actionRetry: ''
-    };
+      actionRetry: '',
+    }
   }
 
-  componentDidMount() { }
+  componentDidMount() {}
 
   showModal = () => {
     this.setState({
-      visible: true
-    });
-  };
+      visible: true,
+    })
+  }
 
   cancel = () => {
-    const actionStarted = this.state.actionStarted;
+    const actionStarted = this.state.actionStarted
 
     if (actionStarted) {
-      this.setState({ miniPopVisible: true });
+      this.setState({ miniPopVisible: true })
     } else {
-      this.setState({ visible: false });
-      this.props.hideMigrateModal();
+      this.setState({ visible: false })
+      this.props.hideMigrateModal()
     }
-  };
+  }
 
   migrate = async () => {
-    const { migrateData } = this.props;
-    const { tokenV2, trxV2 } = this.computeV2();
+    const { migrateData } = this.props
+    const { tokenV2, trxV2 } = this.computeV2()
 
-    const migrateContract = this.props.version === 'v1.5' ? Config.migrateContract.v15 : Config.migrateContract.v1;
+    const migrateContract = this.props.version === 'v1.5' ? Config.migrateContract.v15 : Config.migrateContract.v1
 
-    let { settingSlippageMigrate, defaultAccount } = this.props.network;
-    settingSlippageMigrate = Number(settingSlippageMigrate);
-    let amountAMin, amountBMin;
+    let { settingSlippageMigrate, defaultAccount } = this.props.network
+    settingSlippageMigrate = Number(settingSlippageMigrate)
+    let amountAMin, amountBMin
 
-    const trx = new BigNumber(trxV2);
-    const token = new BigNumber(tokenV2);
+    const trx = new BigNumber(trxV2)
+    const token = new BigNumber(tokenV2)
     amountAMin = `0x${token
       .times(1 - settingSlippageMigrate / 100)
       .times(new BigNumber(10).pow(migrateData.tokenDecimal))
       .integerValue(BigNumber.ROUND_DOWN)
-      .toString(16)}`;
+      .toString(16)}`
     amountBMin = `0x${trx
       .times(1 - settingSlippageMigrate / 100)
       .times(new BigNumber(10).pow(6))
       .integerValue(BigNumber.ROUND_DOWN)
-      .toString(16)}`;
+      .toString(16)}`
 
     const intlObj = {
       title: 'pair_actions.add',
@@ -107,66 +107,66 @@ class MigrateModal extends React.Component {
         trxAmount: formatNumber(migrateData.trx.toString(), 6),
         trx: 'TRX',
         tokenAmount: formatNumber(migrateData.value.toString(), migrateData.tokenDecimal),
-        tokenSymbol: migrateData.tokenSymbol
-      }
-    };
+        tokenSymbol: migrateData.tokenSymbol,
+      },
+    }
 
     const params = {
       contractAddress: migrateContract,
       token: migrateData.tokenAddress,
       amountTokenMin: BigNumber(amountAMin)._toIntegerDown()._toHex(),
-      amountETHMin: BigNumber(amountBMin)._toIntegerDown()._toHex(),
+      amountTRXMin: BigNumber(amountBMin)._toIntegerDown()._toHex(),
       to: defaultAccount,
-      deadline: await calcDeadline(this.props.network.settingDeadlineMigrate)
-    };
+      deadline: await calcDeadline(this.props.network.settingDeadlineMigrate),
+    }
 
-    const txid = await migrate(params, intlObj);
+    const txid = await migrate(params, intlObj)
 
     if (txid) {
       this.setState({
-        step: 3
-      });
+        step: 3,
+      })
     } else {
-      this.setApproveBarText('two', false);
+      this.setApproveBarText('two', false)
     }
-  };
+  }
 
   computeV2 = () => {
-    const { migrateData, migrateDataV2 } = this.props;
-    const a = BigNumber(migrateData.value).div(BigNumber(migrateData.trx));
+    const { migrateData, migrateDataV2 } = this.props
+    const a = BigNumber(migrateData.value).div(BigNumber(migrateData.trx))
     const b = BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal))).div(
-      BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6)))
-    );
-    let trxV2, tokenV2, lpV2, refundedToken, refundedValue;
+      BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6))),
+    )
+    let trxV2, tokenV2, lpV2, refundedToken, refundedValue
 
     if (BigNumber(a).gt(BigNumber(b))) {
-      trxV2 = BigNumber(migrateData.trx);
+      trxV2 = BigNumber(migrateData.trx)
       tokenV2 = BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal)))
         .div(BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6))))
-        .times(BigNumber(migrateData.trx));
+        .times(BigNumber(migrateData.trx))
       lpV2 = BigNumber(migrateDataV2.totalLiquidity.div(new BigNumber(10).pow(18)))
         .div(BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6))))
-        .times(BigNumber(migrateData.trx));
-      refundedToken = migrateData.tokenSymbol;
+        .times(BigNumber(migrateData.trx))
+      refundedToken = migrateData.tokenSymbol
       refundedValue = formatNumberNew(BigNumber(BigNumber(migrateData.value).minus(tokenV2)), {
         miniText: 0.0001,
         cutZero: true,
-        dp: 4
-      });
+        dp: 4,
+      })
     } else {
-      tokenV2 = BigNumber(migrateData.value);
+      tokenV2 = BigNumber(migrateData.value)
       trxV2 = BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6)))
         .div(BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal))))
-        .times(BigNumber(migrateData.value));
+        .times(BigNumber(migrateData.value))
       lpV2 = BigNumber(migrateDataV2.totalLiquidity.div(new BigNumber(10).pow(18)))
         .div(BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal))))
-        .times(BigNumber(migrateData.value));
-      refundedToken = 'TRX';
+        .times(BigNumber(migrateData.value))
+      refundedToken = 'TRX'
       refundedValue = formatNumberNew(BigNumber(BigNumber(migrateData.trx).minus(trxV2)), {
         miniText: 0.0001,
         cutZero: true,
-        dp: 4
-      });
+        dp: 4,
+      })
     }
 
     return {
@@ -174,36 +174,36 @@ class MigrateModal extends React.Component {
       trxV2,
       lpV2,
       refundedToken,
-      refundedValue
-    };
-  };
+      refundedValue,
+    }
+  }
 
   checkApproveStatus = async () => {
-    const isApproved = await this.isApproved();
+    const isApproved = await this.isApproved()
     if (isApproved) {
       this.setState(
         {
           needApproveOne: 'false',
           actionRetry: 'setApproveTwo',
           step: 2,
-          actionStarted: true
+          actionStarted: true,
         },
         () => {
-          this.onRetryAction();
-        }
-      );
+          this.onRetryAction()
+        },
+      )
     } else {
-      this.onRetryAction();
+      this.onRetryAction()
     }
-  };
+  }
 
   onRetryAction = () => {
-    let { needApproveOne, needApproveTwo, actionRetry } = this.state;
+    let { needApproveOne, needApproveTwo, actionRetry } = this.state
     if (!actionRetry) {
       if (needApproveOne) {
-        actionRetry = 'setApproveOne';
+        actionRetry = 'setApproveOne'
       } else if (needApproveTwo) {
-        actionRetry = 'setApproveTwo';
+        actionRetry = 'setApproveTwo'
       }
     }
 
@@ -212,30 +212,30 @@ class MigrateModal extends React.Component {
         this.setState(
           { approveActionOneState: 'start', actionInfo: intl.get('action.startBtn'), actionDisabled: true },
           () => {
-            this.setApprove('one');
-          }
-        );
-        break;
+            this.setApprove('one')
+          },
+        )
+        break
       case 'setApproveTwo':
         this.setState(
           {
             approveActionOneState: 'success',
             approveActionTwoState: 'start',
             actionInfo: intl.get('action.startBtn'),
-            actionDisabled: true
+            actionDisabled: true,
           },
           () => {
-            this.migrate();
-          }
-        );
-        break;
+            this.migrate()
+          },
+        )
+        break
       default:
-        break;
+        break
     }
-  };
+  }
 
   setApproveBarText = (whichToken, success) => {
-    console.log(whichToken);
+    console.log(whichToken)
     if (success) {
       if (whichToken === 'one') {
         this.setState(
@@ -243,19 +243,19 @@ class MigrateModal extends React.Component {
             approveActionOneState: 'pending',
             actionInfo: intl.get('action.doingBtn'),
             actionDisabled: true,
-            actionStarted: true
+            actionStarted: true,
           },
           () => {
-            console.log(273);
+            console.log(273)
             setTimeout(() => {
               this.setState({
                 approveActionOneState: 'success',
                 // baseActionState: 'info'
-                approveActionTwoState: 'start'
-              });
-            }, 5000);
-          }
-        );
+                approveActionTwoState: 'start',
+              })
+            }, 5000)
+          },
+        )
       }
       if (whichToken === 'two') {
         this.setState(
@@ -263,89 +263,89 @@ class MigrateModal extends React.Component {
             approveActionTwoState: 'pending',
             actionInfo: intl.get('action.doingBtn'),
             actionDisabled: true,
-            actionStarted: true
+            actionStarted: true,
           },
           () => {
             setTimeout(() => {
               this.setState({
                 approveActionTwoState: 'success',
-                baseActionState: 'info'
-              });
-            }, 5000);
-          }
-        );
+                baseActionState: 'info',
+              })
+            }, 5000)
+          },
+        )
       }
     } else {
       if (whichToken === 'one') {
         this.setState({
-          approveActionOneState: 'error'
-        });
+          approveActionOneState: 'error',
+        })
       }
       if (whichToken === 'two') {
         this.setState({
-          approveActionTwoState: 'error'
-        });
+          approveActionTwoState: 'error',
+        })
       }
       this.setState({
         actionRetry: whichToken === 'one' ? 'setApproveOne' : 'setApproveTwo',
         actionInfo: intl.get('action.retryBtn'),
         actionDisabled: false,
-        actionStarted: true
-      });
+        actionStarted: true,
+      })
     }
-  };
+  }
 
-  setApprove = async whichToken => {
-    const { migrateData, migrateDataV2 } = this.props;
-    const migrateContract = this.props.version === 'v1.5' ? Config.migrateContract.v15 : Config.migrateContract.v1;
+  setApprove = async (whichToken) => {
+    const { migrateData, migrateDataV2 } = this.props
+    const migrateContract = this.props.version === 'v1.5' ? Config.migrateContract.v15 : Config.migrateContract.v1
     this.setState({
-      step: 2
-    });
+      step: 2,
+    })
 
     const intlObj = {
-      title: 'migrate.action1'
-    };
-    const txid = await approve(migrateData.address, migrateContract, intlObj);
+      title: 'migrate.action1',
+    }
+    const txid = await approve(migrateData.address, migrateContract, intlObj)
     if (txid) {
-      this.setApproveBarText(whichToken, true);
+      this.setApproveBarText(whichToken, true)
       if (whichToken === 'one') {
         this.setState({ needApproveOne: false, actionRetry: 'setApproveTwo' }, () => {
-          this.onRetryAction();
-        });
+          this.onRetryAction()
+        })
       } else {
-        this.setState({ needApproveTwo: false });
+        this.setState({ needApproveTwo: false })
       }
     } else {
-      this.setApproveBarText(whichToken, false);
+      this.setApproveBarText(whichToken, false)
     }
-  };
+  }
 
   miniPopOk = () => {
     this.setState({
       miniPopVisible: false,
       visible: false,
       step: 1,
-      actionStarted: false
-    });
-    this.props.hideMigrateModal();
-  };
+      actionStarted: false,
+    })
+    this.props.hideMigrateModal()
+  }
 
   miniPopCancel = () => {
     this.setState({
-      miniPopVisible: false
-    });
-  };
+      miniPopVisible: false,
+    })
+  }
 
   gotoPool = () => {
     this.props.pool.setData({
-      actionLiqV2: 0
-    });
-    this.props.onChange(1);
-    this.props.hideMigrateModal();
-  };
+      actionLiqV2: 0,
+    })
+    this.props.onChange(1)
+    this.props.hideMigrateModal()
+  }
 
   changeRate = () => {
-    const { migrateData, migrateDataV2 } = this.props;
+    const { migrateData, migrateDataV2 } = this.props
     if (this.state.newRateType === 1) {
       this.setState({
         oldRateType: 2,
@@ -353,17 +353,17 @@ class MigrateModal extends React.Component {
         oldRate: formatNumberNew(BigNumber(migrateData.value).div(BigNumber(migrateData.trx)), {
           miniText: 0.0001,
           cutZero: true,
-          dp: 4
+          dp: 4,
         }),
         newRateType: 2,
         newRateLabel: 'TRX-' + migrateData.tokenSymbol,
         newRate: formatNumberNew(
           BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal))).div(
-            BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6)))
+            BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6))),
           ),
-          { miniText: 0.0001, cutZero: true, dp: 4 }
-        )
-      });
+          { miniText: 0.0001, cutZero: true, dp: 4 },
+        ),
+      })
     } else
       this.setState({
         oldRateType: 1,
@@ -371,31 +371,31 @@ class MigrateModal extends React.Component {
         oldRate: formatNumberNew(BigNumber(migrateData.trx).div(BigNumber(migrateData.value)), {
           miniText: 0.0001,
           cutZero: true,
-          dp: 4
+          dp: 4,
         }),
         newRateType: 1,
         newRateLabel: migrateData.tokenSymbol + '-TRX',
         newRate: formatNumberNew(
           BigNumber(migrateDataV2.exTokenBBalance.div(new BigNumber(10).pow(6))).div(
-            BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal)))
+            BigNumber(migrateDataV2.exTokenABalance.div(new BigNumber(10).pow(migrateData.tokenDecimal))),
           ),
-          { miniText: 0.0001, cutZero: true, dp: 4 }
-        )
-      });
-  };
+          { miniText: 0.0001, cutZero: true, dp: 4 },
+        ),
+      })
+  }
 
   isApproved = async () => {
-    const migrateContract = this.props.version === 'v1.5' ? Config.migrateContract.v15 : Config.migrateContract.v1;
+    const migrateContract = this.props.version === 'v1.5' ? Config.migrateContract.v15 : Config.migrateContract.v1
 
-    let { defaultAccount } = this.props.network;
+    let { defaultAccount } = this.props.network
 
-    const allowance = await isApproved(this.props.migrateData.address, defaultAccount, migrateContract);
-    return BigNumber(allowance).gt(0);
-  };
+    const allowance = await isApproved(this.props.migrateData.address, defaultAccount, migrateContract)
+    return BigNumber(allowance).gt(0)
+  }
 
   render() {
-    const { migrateData } = this.props;
-    const { tokenV2, trxV2, lpV2, refundedToken, refundedValue } = this.computeV2();
+    const { migrateData } = this.props
+    const { tokenV2, trxV2, lpV2, refundedToken, refundedValue } = this.computeV2()
 
     const {
       step,
@@ -410,8 +410,8 @@ class MigrateModal extends React.Component {
       oldRateLabel,
       oldRate,
       newRateLabel,
-      newRate
-    } = this.state;
+      newRate,
+    } = this.state
 
     return (
       <div>
@@ -485,9 +485,9 @@ class MigrateModal extends React.Component {
                   onClick={() => {
                     this.settingsRef.current.initState(
                       this.props.network.settingSlippageMigrate,
-                      this.props.network.settingDeadlineMigrate
-                    );
-                    this.props.network.setData({ settingVisibleMigrate: true });
+                      this.props.network.settingDeadlineMigrate,
+                    )
+                    this.props.network.setData({ settingVisibleMigrate: true })
                   }}
                 >
                   {intl.get('migrate.set_link')}
@@ -631,12 +631,12 @@ class MigrateModal extends React.Component {
             slippate_tip={intl.get('migrate.slippate_tip')}
             ref={this.settingsRef}
             visible={this.props.network.settingVisibleMigrate}
-            onCancel={_ => {
-              this.props.network.setData({ settingVisibleMigrate: false });
+            onCancel={(_) => {
+              this.props.network.setData({ settingVisibleMigrate: false })
             }}
             onChange={(slippage, deadline) => {
-              this.props.network.setData({ settingVisibleMigrate: false });
-              this.props.network.saveSettingsForMigrate(slippage, deadline);
+              this.props.network.setData({ settingVisibleMigrate: false })
+              this.props.network.saveSettingsForMigrate(slippage, deadline)
             }}
           />
         </Modal>
@@ -644,8 +644,8 @@ class MigrateModal extends React.Component {
           <MiniPop visible={this.state.miniPopVisible} confirm={this.miniPopOk} cancel={this.miniPopCancel} />
         )}
       </div>
-    );
+    )
   }
 }
 
-export default MigrateModal;
+export default MigrateModal

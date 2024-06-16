@@ -717,15 +717,15 @@ export const addLiquidityV2 = async (params, intlObj) => {
 
 export const addLiquidityTRX = async (params, intlObj, callValue) => {
   const { remainTrx, remainMaxTrx } = Config
-  const { token, amountTokenDesired, amountTokenMin, amountETHMin, to, deadline, needCreate } = params
+  const { token, amountTokenDesired, amountTokenMin, amountTRXMin, to, deadline, needCreate } = params
   const result = await trigger(
     Config.v2Contract.router,
-    'addLiquidityETH(address,uint256,uint256,uint256,address,uint256)',
+    'addLiquidityTRX(address,uint256,uint256,uint256,address,uint256)',
     [
       { type: 'address', value: token },
       { type: 'uint256', value: amountTokenDesired },
       { type: 'uint256', value: amountTokenMin },
-      { type: 'uint256', value: amountETHMin },
+      { type: 'uint256', value: amountTRXMin },
       { type: 'address', value: to },
       { type: 'uint256', value: deadline },
     ],
@@ -847,18 +847,18 @@ export const removeLiquidityV2 = async (params, intlObj) => {
 }
 
 export const removeLiquidityTRX = async (params, intlObj) => {
-  const { token, liquidity, amountTokenMin, amountETHMin, to, deadline } = params
+  const { token, liquidity, amountTokenMin, amountTRXMin, to, deadline } = params
   const { wtrxAddress, trxFakeAddress } = Config
   let tokenAddress = token
   if (tokenAddress === trxFakeAddress) tokenAddress = wtrxAddress
   const result = await trigger(
     Config.v2Contract.router,
-    'removeLiquidityETHSupportingFeeOnTransferTokens(address,uint256,uint256,uint256,address,uint256)',
+    'removeLiquidityTRXSupportingFeeOnTransferTokens(address,uint256,uint256,uint256,address,uint256)',
     [
       { type: 'address', value: tokenAddress },
       { type: 'uint256', value: liquidity },
       { type: 'uint256', value: amountTokenMin },
-      { type: 'uint256', value: amountETHMin },
+      { type: 'uint256', value: amountTRXMin },
       { type: 'address', value: to },
       { type: 'uint256', value: deadline },
     ],
@@ -935,8 +935,8 @@ export const getReserves = async (tokenA, tokenB, pairAddress) => {
 window.getReserves = getReserves
 
 export const swapFuncV2 = {
-  swapExactETHForTokens: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
-    const functionSelector = 'swapExactETHForTokens(uint256,address[],address,uint256)'
+  swapExactTRXForTokens: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
+    const functionSelector = 'swapExactTRXForTokens(uint256,address[],address,uint256)'
     const parameters = [
       { type: 'uint256', value: dependentValueSunBig },
       { type: 'address[]', value: path },
@@ -950,8 +950,8 @@ export const swapFuncV2 = {
     return result.transaction ? result.transaction.txID : ''
   },
 
-  swapExactTokensForETH: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
-    const functionSelector = 'swapExactTokensForETH(uint256,uint256,address[],address,uint256)'
+  swapExactTokensForTRX: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
+    const functionSelector = 'swapExactTokensForTRX(uint256,uint256,address[],address,uint256)'
     const parameters = [
       { type: 'uint256', value: amountIn },
       { type: 'uint256', value: dependentValueSunBig },
@@ -978,8 +978,8 @@ export const swapFuncV2 = {
     return result.transaction ? result.transaction.txID : ''
   },
 
-  swapETHForExactTokens: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
-    const functionSelector = 'swapETHForExactTokens(uint256,address[],address,uint256)'
+  swapTRXForExactTokens: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
+    const functionSelector = 'swapTRXForExactTokens(uint256,address[],address,uint256)'
     const parameters = [
       { type: 'uint256', value: amountOut },
       { type: 'address[]', value: path },
@@ -993,8 +993,8 @@ export const swapFuncV2 = {
     return result.transaction ? result.transaction.txID : ''
   },
 
-  swapTokensForExactETH: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
-    const functionSelector = 'swapTokensForExactETH(uint256,uint256,address[],address,uint256)'
+  swapTokensForExactTRX: async ({ amountIn, amountOut, dependentValueSunBig, path, to, deadline, intlObj = {} }) => {
+    const functionSelector = 'swapTokensForExactTRX(uint256,uint256,address[],address,uint256)'
     const parameters = [
       { type: 'uint256', value: amountOut },
       { type: 'uint256', value: dependentValueSunBig },
@@ -1048,7 +1048,7 @@ export const swapFuncV2 = {
 }
 
 export const migrate = async (params, intlObj) => {
-  const { contractAddress, token, amountTokenMin, amountETHMin, to, deadline } = params
+  const { contractAddress, token, amountTokenMin, amountTRXMin, to, deadline } = params
 
   const result = await trigger(
     contractAddress,
@@ -1056,7 +1056,7 @@ export const migrate = async (params, intlObj) => {
     [
       { type: 'address', value: token },
       { type: 'uint256', value: amountTokenMin },
-      { type: 'uint256', value: amountETHMin },
+      { type: 'uint256', value: amountTRXMin },
       { type: 'address', value: to },
       { type: 'uint256', value: deadline },
     ],
@@ -1083,14 +1083,42 @@ export const getReservesAll = async (tokensA, tokensB, pairAddresses) => {
 
 export const getBalanceAndApprove = async (userAddress = window.defaultAccount, tokensA, tokensB) => {
   try {
-    if (!window.polyInstance) {
-      window.polyInstance = await mainchain.contract().at(v2Contract.poly)
-    }
-    const result = await window.polyInstance.getBalanceAndApprove(userAddress, tokensA, tokensB).call()
+    console.log('User Address:', userAddress)
+    console.log('TokensA:', tokensA)
+    console.log('TokensB:', tokensB)
 
-    return result
+    if (!window.polyInstance) {
+      console.log('Initializing polyInstance...')
+      window.polyInstance = await mainchain.contract().at(v2Contract.poly)
+      console.log('polyInstance initialized:', window.polyInstance)
+    }
+
+    console.log('Calling getBalanceAndApprove...')
+    const result = await window.polyInstance.getBalanceAndApprove(userAddress, tokensA, tokensB).call()
+    console.log('Raw Result:', result)
+
+    if (result.constant_result && result.constant_result.length > 0) {
+      const decodedResult = TronWeb.utils.abi.decodeParameters(
+        ['uint256[]', 'uint256[]', 'address[]'],
+        result.constant_result[0],
+      )
+      console.log('Decoded Info:', decodedResult)
+
+      const balances = decodedResult[0].map((b) => new BigNumber(b).toString())
+      const allowances = decodedResult[1].map((a) => new BigNumber(a).toString())
+      const tokenAddresses = decodedResult[2]
+
+      console.log('Balances:', balances)
+      console.log('Allowances:', allowances)
+      console.log('Token Addresses:', tokenAddresses)
+
+      return { balances, allowances, tokenAddresses }
+    } else {
+      console.log('No constant result returned')
+      return false
+    }
   } catch (err) {
-    console.log(err)
+    console.error('Error calling getBalanceAndApprove:', err)
     return false
   }
 }
