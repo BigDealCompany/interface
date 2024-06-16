@@ -25,7 +25,7 @@ const Config = {
     poly: 'TTyiD8XFdzGg1pgfLgRVKHFNqodCpLhNEn',
   },
   v2Contract: {
-    poly: 'THAALWtwcxUxuSJ8h4ZSZGzzTaYhVQaNPf',
+    poly: 'TQaSotYu7hLZZvea6wrCrtMmFQvDJwRR3y',
     factory: 'TPvaMEL5oY2gWsJv7MDjNQh2dohwvwwVwx',
     router: 'TNvdqHkoToRLfKqeK78nzSpcAF5dd93tPZ',
   },
